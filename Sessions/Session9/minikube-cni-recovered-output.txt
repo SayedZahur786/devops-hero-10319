@@ -1,0 +1,77 @@
++ /tmp/minikube kubectl -- get ds -n kube-system
+NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+kindnet      1         1         1       1            1           <none>                   15m
+kube-proxy   1         1         1       1            1           kubernetes.io/os=linux   15m
++ /tmp/minikube kubectl -- get node minikube -o 'jsonpath={.status.conditions}'
+[{"lastHeartbeatTime":"2026-10-09T11:52:26Z","lastTransitionTime":"2026-10-09T11:40:38Z","message":"kubelet has sufficient memory available","reason":"KubeletHasSufficientMemory","status":"False","type":"MemoryPressure"},{"lastHeartbeatTime":"2026-10-09T11:52:26Z","lastTransitionTime":"2026-10-09T11:40:38Z","message":"kubelet has no disk pressure","reason":"KubeletHasNoDiskPressure","status":"False","type":"DiskPressure"},{"lastHeartbeatTime":"2026-10-09T11:52:26Z","lastTransitionTime":"2026-10-09T11:40:38Z","message":"kubelet has sufficient PID available","reason":"KubeletHasSufficientPID","status":"False","type":"PIDPressure"},{"lastHeartbeatTime":"2026-10-09T11:52:26Z","lastTransitionTime":"2026-10-09T11:40:38Z","message":"container runtime network not ready: NetworkReady=false reason:NetworkPluginNotReady message:Network plugin returns error: cni plugin not initialized","reason":"KubeletNotReady","status":"False","type":"Ready"}]+ /tmp/minikube kubectl -- apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+namespace/kube-flannel created
+clusterrole.rbac.authorization.k8s.io/flannel created
+clusterrolebinding.rbac.authorization.k8s.io/flannel created
+serviceaccount/flannel created
+configmap/kube-flannel-cfg created
+daemonset.apps/kube-flannel-ds created
++ /tmp/minikube kubectl -- rollout status ds/kube-flannel-ds -n kube-flannel --timeout=180s
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 of 1 updated pods are available...
+Waiting for daemon set spec update to be observed...
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 out of 1 new pods have been updated...
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 out of 1 new pods have been updated...
+Waiting for daemon set "kube-flannel-ds" rollout to finish: 0 of 1 updated pods are available...
+daemon set "kube-flannel-ds" successfully rolled out
++ /tmp/minikube kubectl -- wait --for=condition=Ready node/minikube --timeout=180s
+node/minikube condition met
++ /tmp/minikube kubectl -- get nodes
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   16m   v1.37.0
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+Waiting for deployment "bootcamp" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "bootcamp" rollout to finish: 1 of 2 updated replicas are available...
+deployment "bootcamp" successfully rolled out
++ /tmp/minikube kubectl -- expose deploy bootcamp --type=NodePort --port=8080
+Error from server (AlreadyExists): services "bootcamp" already exists
++ /tmp/minikube kubectl -- get pods,deploy,svc -o wide
+NAME                            READY   STATUS    RESTARTS   AGE    IP           NODE       NOMINATED NODE   READINESS GATES
+pod/bootcamp-66dbb7d96f-m64h6   1/1     Running   0          5m9s   10.244.0.4   minikube   <none>           <none>
+pod/bootcamp-66dbb7d96f-s7lt2   1/1     Running   0          2m7s   10.244.0.2   minikube   <none>           <none>
+
+NAME                       READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS            IMAGES                                         SELECTOR
+deployment.apps/bootcamp   2/2     2            2           5m9s   kubernetes-bootcamp   gcr.io/google-samples/kubernetes-bootcamp:v1   app=bootcamp
+
+NAME                 TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE    SELECTOR
+service/bootcamp     NodePort    10.106.227.101   <none>        8080:30115/TCP   2m9s   app=bootcamp
+service/kubernetes   ClusterIP   10.96.0.1        <none>        443/TCP          16m    <none>
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Hello Kubernetes bootcamp! | Running on: bootcamp-66dbb7d96f-s7lt2 | v=1
++ /tmp/minikube kubectl -- scale deploy bootcamp --replicas=2
+deployment.apps/bootcamp scaled
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=120s
+deployment "bootcamp" successfully rolled out
++ /tmp/minikube kubectl -- set image deploy/bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+deployment.apps/bootcamp image updated
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "bootcamp" successfully rolled out
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Hello Kubernetes bootcamp! | Running on: bootcamp-5d4c5b4bdc-prflt | v=2
++ /tmp/minikube kubectl -- rollout undo deploy/bootcamp
+deployment.apps/bootcamp rolled back
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "bootcamp" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "bootcamp" rollout to finish: 1 old replicas are pending termination...
+deployment "bootcamp" successfully rolled out
++ /tmp/minikube kubectl -- get deploy bootcamp -o 'jsonpath={.spec.template.spec.containers[*].image}'
+gcr.io/google-samples/kubernetes-bootcamp:v1+ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Hello Kubernetes bootcamp! | Running on: bootcamp-66dbb7d96f-csqhn | v=1
++ /tmp/minikube kubectl -- delete deployment,svc bootcamp
+deployment.apps "bootcamp" deleted from default namespace
+service "bootcamp" deleted from default namespace
++ /tmp/minikube stop
+* Stopping node "minikube"  ...
+* Powering off "minikube" via SSH ...
+* 1 node stopped.

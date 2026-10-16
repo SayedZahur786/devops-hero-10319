@@ -1,0 +1,62 @@
++ /tmp/minikube status
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
++ /tmp/minikube kubectl -- get nodes -o wide
+NAME       STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                         KERNEL-VERSION              CONTAINER-RUNTIME
+minikube   Ready    control-plane   17m   v1.37.0   192.168.49.2   <none>        Debian GNU/Linux 12 (bookworm)   6.8.0-146-generic (amd64)   containerd://2.3.4
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=120s
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- expose deploy bootcamp --type=NodePort --port=8080
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ true
++ /tmp/minikube kubectl -- get pods,deploy,svc -o wide
+NAME                            READY   STATUS        RESTARTS   AGE     IP           NODE       NOMINATED NODE   READINESS GATES
+pod/bootcamp-5d4c5b4bdc-prflt   1/1     Terminating   0          10s     10.244.0.5   minikube   <none>           <none>
+pod/bootcamp-5d4c5b4bdc-zx8v8   1/1     Terminating   0          7s      10.244.0.6   minikube   <none>           <none>
+pod/bootcamp-66dbb7d96f-csqhn   1/1     Terminating   0          5s      10.244.0.7   minikube   <none>           <none>
+pod/bootcamp-66dbb7d96f-m64h6   1/1     Terminating   0          5m21s   10.244.0.4   minikube   <none>           <none>
+pod/bootcamp-66dbb7d96f-s7lt2   1/1     Terminating   0          2m19s   10.244.0.2   minikube   <none>           <none>
+pod/bootcamp-66dbb7d96f-sgq7s   1/1     Terminating   0          4s      10.244.0.8   minikube   <none>           <none>
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE   SELECTOR
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   17m   <none>
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- scale deploy bootcamp --replicas=2
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=120s
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- get pods
+NAME                        READY   STATUS        RESTARTS   AGE
+bootcamp-5d4c5b4bdc-prflt   1/1     Terminating   0          11s
+bootcamp-5d4c5b4bdc-zx8v8   1/1     Terminating   0          8s
+bootcamp-66dbb7d96f-csqhn   1/1     Terminating   0          6s
+bootcamp-66dbb7d96f-m64h6   1/1     Terminating   0          5m22s
+bootcamp-66dbb7d96f-s7lt2   1/1     Terminating   0          2m20s
+bootcamp-66dbb7d96f-sgq7s   1/1     Terminating   0          5s
++ /tmp/minikube kubectl -- set image deploy/bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- rollout undo deploy/bootcamp
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=120s
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- get deploy bootcamp -o 'jsonpath={.spec.template.spec.containers[*].image}'
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+Error from server (NotFound): deployments.apps "bootcamp" not found
++ /tmp/minikube kubectl -- delete deployment,svc bootcamp
+Error from server (NotFound): deployments.apps "bootcamp" not found
+Error from server (NotFound): services "bootcamp" not found
++ /tmp/minikube stop
+* Stopping node "minikube"  ...
+* Powering off "minikube" via SSH ...
+* 1 node stopped.

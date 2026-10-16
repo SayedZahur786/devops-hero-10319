@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: cpu-demo}
+  template:
+    metadata:
+      labels: {app: cpu-demo}
+    spec:
+      containers:
+      - name: cpu
+        image: busybox:1.36
+        command: [sh, -c, 'while [ $(date +%s) -lt 1791547154 ]; do sleep 1; done; while [ $(date +%s) -lt 1791547334 ]; do :; done; sleep 3600']
+        resources:
+          requests: {cpu: 30m}
+          limits: {cpu: 200m}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cpu-demo
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: cpu-demo}
+  minReplicas: 1
+  maxReplicas: 3
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 30
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target: {type: Utilization, averageUtilization: 50}

@@ -1,0 +1,71 @@
++ s5
++ cd /root/rebuild/Sessions/Session5
++ mkdir demo
++ cd demo
++ git init -b main
+Initialized empty Git repository in /root/rebuild/Sessions/Session5/demo/.git/
++ git config user.name 'Lab Demo'
++ git config user.email lab@example.invalid
++ echo one
++ git add tracked.txt
++ git commit -m 'First tracked file'
+[main (root-commit) d873f13] First tracked file
+ 1 file changed, 1 insertion(+)
+ create mode 100644 tracked.txt
++ echo two
++ echo untracked
++ git commit -a -m 'Update tracked only'
+[main d671975] Update tracked only
+ 1 file changed, 1 insertion(+)
++ git status --short
+?? new.txt
++ git commit -m 'No staged changes'
+On branch main
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	new.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
++ true
++ git add new.txt
++ git commit -m 'Add new file'
+[main 51b7af5] Add new file
+ 1 file changed, 1 insertion(+)
+ create mode 100644 new.txt
++ git switch -c feature
+Switched to a new branch 'feature'
++ echo selected
++ git add selected.txt
++ git commit -m 'Feature to cherry-pick'
+[feature cee975b] Feature to cherry-pick
+ 1 file changed, 1 insertion(+)
+ create mode 100644 selected.txt
+++ git rev-parse HEAD
++ picked=cee975b6bd1bf5566a7af6178eb4d2a7c7964a07
++ echo other
++ git add other.txt
++ git commit -m 'Other feature'
+[feature 7f4ccb4] Other feature
+ 1 file changed, 1 insertion(+)
+ create mode 100644 other.txt
++ git log --oneline
+7f4ccb4 Other feature
+cee975b Feature to cherry-pick
+51b7af5 Add new file
+d671975 Update tracked only
+d873f13 First tracked file
++ git switch main
+Switched to branch 'main'
++ git cherry-pick cee975b6bd1bf5566a7af6178eb4d2a7c7964a07
+[main cee975b] Feature to cherry-pick
+ Date: Fri Oct 9 11:40:16 2026 +0000
+ 1 file changed, 1 insertion(+)
+ create mode 100644 selected.txt
++ git log --oneline
+cee975b Feature to cherry-pick
+51b7af5 Add new file
+d671975 Update tracked only
+d873f13 First tracked file
++ cat selected.txt
+selected
++ test '!' -f other.txt

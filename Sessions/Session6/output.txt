@@ -1,0 +1,355 @@
++ s6
++ cd /root/rebuild/Sessions/Session6
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p nodejs-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p python-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p java-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p Apache-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p React-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ mkdir -p nginx-app
++ cat
++ printf 'FROM node:22-alpine\nWORKDIR /app\nCOPY server.js .\nEXPOSE 8080\nCMD ["node","server.js"]\n'
++ printf 'Hello World from Python\n'
++ printf 'FROM python:3.12-alpine\nWORKDIR /app\nCOPY index.html .\nEXPOSE 8080\nCMD ["python","-m","http.server","8080"]\n'
++ cat
++ printf 'FROM eclipse-temurin:21-jdk-alpine\nWORKDIR /app\nCOPY Main.java .\nRUN javac Main.java\nEXPOSE 8080\nCMD ["java","Main"]\n'
++ printf 'Hello World from Apache\n'
++ printf 'FROM httpd:2.4-alpine\nCOPY index.html /usr/local/apache2/htdocs/index.html\n'
++ printf 'Hello World from Nginx\n'
++ printf 'FROM nginx:1.27-alpine\nCOPY index.html /usr/share/nginx/html/index.html\n'
++ cat
++ printf 'FROM nginx:1.27-alpine\nCOPY index.html /usr/share/nginx/html/index.html\n'
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-nodejs-app nodejs-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 124B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:22-alpine
+#2 DONE 0.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/3] FROM docker.io/library/node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 133B done
+#5 DONE 0.0s
+
+#6 [2/3] WORKDIR /app
+#6 CACHED
+
+#7 [3/3] COPY server.js .
+#7 CACHED
+
+#8 exporting to image
+#8 exporting layers done
+#8 writing image sha256:3ba4916b9ad1bd5ff7545deab1d2827d788a4e8bc9e92a2842bb1b19446905b1 done
+#8 naming to docker.io/library/rebuild-nodejs-app done
+#8 DONE 0.0s
++ case $a in
++ p=8080
++ docker run -d --name demo-nodejs-app -p 18080:8080 rebuild-nodejs-app
+c9eaf90611b68e7880ad135b0e58b4301d9a1028cb9f7e41388fea216e8817f3
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (56) Recv failure: Connection reset by peer
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    25  100    25    0     0   1568      0 --:--:-- --:--:-- --:--:--  1666
+Hello World from Node.js
++ break
++ docker ps --filter name=demo-nodejs-app
+CONTAINER ID   IMAGE                COMMAND                  CREATED         STATUS        PORTS                                           NAMES
+c9eaf90611b6   rebuild-nodejs-app   "docker-entrypoint.s…"   2 seconds ago   Up 1 second   0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp   demo-nodejs-app
++ docker rm -f demo-nodejs-app
+demo-nodejs-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-python-app python-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 145B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-alpine
+#2 DONE 0.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/3] FROM docker.io/library/python:3.12-alpine@sha256:1b668429b3511ab407d8e00648891631b0b1a4d7e15e3ca70f38ab5b91ad4ab4
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 61B done
+#5 DONE 0.0s
+
+#6 [2/3] WORKDIR /app
+#6 CACHED
+
+#7 [3/3] COPY index.html .
+#7 CACHED
+
+#8 exporting to image
+#8 exporting layers done
+#8 writing image sha256:26c80b5bc0f6a6a315195f0d0b1e3c31a0207f955a75d29b50cb709434e38a06 done
+#8 naming to docker.io/library/rebuild-python-app done
+#8 DONE 0.0s
++ case $a in
++ p=8080
++ docker run -d --name demo-python-app -p 18080:8080 rebuild-python-app
+fb21a8ef2520faa4f4fc1d9ffa50d92bc1c647833e65424101161fe1b81513e9
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (56) Recv failure: Connection reset by peer
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    24  100    24    0     0   6052      0 --:--:-- --:--:-- --:--:--  8000
+Hello World from Python
++ break
++ docker ps --filter name=demo-python-app
+CONTAINER ID   IMAGE                COMMAND                  CREATED        STATUS        PORTS                                           NAMES
+fb21a8ef2520   rebuild-python-app   "python -m http.serv…"   1 second ago   Up 1 second   0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp   demo-python-app
++ docker rm -f demo-python-app
+demo-python-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-java-app java-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 154B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/eclipse-temurin:21-jdk-alpine
+#2 DONE 0.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/4] FROM docker.io/library/eclipse-temurin:21-jdk-alpine@sha256:0bfc69a4758a86710e5c474032d28400a8bd00874766f9e8b1642ac2fd293159
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 400B done
+#5 DONE 0.0s
+
+#6 [2/4] WORKDIR /app
+#6 CACHED
+
+#7 [3/4] COPY Main.java .
+#7 CACHED
+
+#8 [4/4] RUN javac Main.java
+#8 CACHED
+
+#9 exporting to image
+#9 exporting layers done
+#9 writing image sha256:4a04e6746ba92469f189619623b71f060018cd3f3284c84ef0012721bd495327 done
+#9 naming to docker.io/library/rebuild-java-app done
+#9 DONE 0.0s
++ case $a in
++ p=8080
++ docker run -d --name demo-java-app -p 18080:8080 rebuild-java-app
+a4386acbeb3dd4ada20e41a85f152ef225a00822f59097c6dcfb39a393872f30
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (52) Empty reply from server
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    22  100    22    0     0     92      0 --:--:-- --:--:-- --:--:--    92
+Hello World from Java
++ break
++ docker ps --filter name=demo-java-app
+CONTAINER ID   IMAGE              COMMAND                  CREATED         STATUS        PORTS                                           NAMES
+a4386acbeb3d   rebuild-java-app   "/__cacert_entrypoin…"   2 seconds ago   Up 1 second   0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp   demo-java-app
++ docker rm -f demo-java-app
+demo-java-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-apache-app Apache-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 112B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/httpd:2.4-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 61B done
+#4 DONE 0.0s
+
+#5 [1/2] FROM docker.io/library/httpd:2.4-alpine
+#5 DONE 0.1s
+
+#6 [2/2] COPY index.html /usr/local/apache2/htdocs/index.html
+#6 DONE 0.0s
+
+#7 exporting to image
+#7 exporting layers 0.0s done
+#7 writing image sha256:3516f4c55d1b9024e3596b318332c486fff3508b29ecb5e5e4b25f3ebd62d1a6 done
+#7 naming to docker.io/library/rebuild-apache-app done
+#7 DONE 0.1s
++ case $a in
++ p=80
++ docker run -d --name demo-apache-app -p 18080:80 rebuild-apache-app
+41b8e24383c440f4b5729249c27affb4de348aa7d049258009d00b56dee5f7c7
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    24  100    24    0     0   2805      0 --:--:-- --:--:-- --:--:--  3000
+Hello World from Apache
++ break
++ docker ps --filter name=demo-apache-app
+CONTAINER ID   IMAGE                COMMAND              CREATED        STATUS                  PORTS                                       NAMES
+41b8e24383c4   rebuild-apache-app   "httpd-foreground"   1 second ago   Up Less than a second   0.0.0.0:18080->80/tcp, [::]:18080->80/tcp   demo-apache-app
++ docker rm -f demo-apache-app
+demo-apache-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-react-app React-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 109B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nginx:1.27-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 400B done
+#4 DONE 0.0s
+
+#5 [1/2] FROM docker.io/library/nginx:1.27-alpine
+#5 CACHED
+
+#6 [2/2] COPY index.html /usr/share/nginx/html/index.html
+#6 DONE 0.0s
+
+#7 exporting to image
+#7 exporting layers 0.0s done
+#7 writing image sha256:ee219c1dfb8f2d2859a5d88e75f7cb809616713a2889019fc9990ae3a4489eb7 done
+#7 naming to docker.io/library/rebuild-react-app 0.0s done
+#7 DONE 0.1s
++ case $a in
++ p=80
++ docker run -d --name demo-react-app -p 18080:80 rebuild-react-app
+257a78baebcf664629d447be2ba35e84f74461a37ba3d4b9f4dc97159774fc27
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (52) Empty reply from server
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   361  100   361    0     0   151k      0 --:--:-- --:--:-- --:--:--  176k
+<!doctype html><html><body><div id="root"></div><script src="https://unpkg.com/react@18/umd/react.production.min.js"></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script><script>ReactDOM.createRoot(document.getElementById('root')).render(React.createElement('h1',null,'Hello World from React'));</script></body></html>
++ break
++ docker ps --filter name=demo-react-app
+CONTAINER ID   IMAGE               COMMAND                  CREATED         STATUS        PORTS                                       NAMES
+257a78baebcf   rebuild-react-app   "/docker-entrypoint.…"   2 seconds ago   Up 1 second   0.0.0.0:18080->80/tcp, [::]:18080->80/tcp   demo-react-app
++ docker rm -f demo-react-app
+demo-react-app
++ for a in nodejs-app python-app java-app Apache-app React-app nginx-app
++ docker build -t rebuild-nginx-app nginx-app
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 109B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nginx:1.27-alpine
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [1/2] FROM docker.io/library/nginx:1.27-alpine
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 60B done
+#5 DONE 0.0s
+
+#6 [2/2] COPY index.html /usr/share/nginx/html/index.html
+#6 CACHED
+
+#7 exporting to image
+#7 exporting layers done
+#7 writing image sha256:d215931ebdd32360e9890f33b52c9194b3db86970b361e5178865f9a5214140f done
+#7 naming to docker.io/library/rebuild-nginx-app done
+#7 DONE 0.0s
++ case $a in
++ p=80
++ docker run -d --name demo-nginx-app -p 18080:80 rebuild-nginx-app
+b11296da0df4178bbd73f10af9bddd4bfeafaf06be6389dd848708a0a09e8988
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (56) Recv failure: Connection reset by peer
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:18080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    23  100    23    0     0  10757      0 --:--:-- --:--:-- --:--:-- 11500
+Hello World from Nginx
++ break
++ docker ps --filter name=demo-nginx-app
+CONTAINER ID   IMAGE               COMMAND                  CREATED         STATUS        PORTS                                       NAMES
+b11296da0df4   rebuild-nginx-app   "/docker-entrypoint.…"   2 seconds ago   Up 1 second   0.0.0.0:18080->80/tcp, [::]:18080->80/tcp   demo-nginx-app
++ docker rm -f demo-nginx-app
+demo-nginx-app

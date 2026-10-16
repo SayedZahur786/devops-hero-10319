@@ -1,0 +1,118 @@
++ kubectl create ns mini-verify
+namespace/mini-verify created
++ kubectl -n mini-verify apply -f /root/course/session-14-kubernetes-troubleshooting/mini-project
+pod/project-broken-pod created
+deployment.apps/troubleshooting-app created
+service/troubleshooting-service created
++ sleep 15
++ kubectl -n mini-verify get pods,svc
+NAME                                       READY   STATUS         RESTARTS   AGE
+pod/project-broken-pod                     0/1     ErrImagePull   0          16s
+pod/troubleshooting-app-59d4957864-9nt2x   1/1     Running        0          15s
+pod/troubleshooting-app-59d4957864-vvrj7   1/1     Running        0          15s
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/troubleshooting-service   ClusterIP   10.109.78.123   <none>        80/TCP    15s
++ kubectl -n mini-verify describe pod project-broken-pod
+Name:             project-broken-pod
+Namespace:        mini-verify
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:56:47 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               192.168.0.116
+IPs:
+  IP:  192.168.0.116
+Containers:
+  app:
+    Container ID:   
+    Image:          nginx:this-tag-does-not-exist
+    Image ID:       
+    Port:           <none>
+    Host Port:      <none>
+    State:          Waiting
+      Reason:       ErrImagePull
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-v4svr (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-v4svr:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age   From               Message
+  ----     ------     ----  ----               -------
+  Normal   Scheduled  16s   default-scheduler  Successfully assigned mini-verify/project-broken-pod to controlplane
+  Normal   Pulling    13s   kubelet            spec.containers{app}: Pulling image "nginx:this-tag-does-not-exist"
+  Warning  Failed     11s   kubelet            spec.containers{app}: Failed to pull image "nginx:this-tag-does-not-exist": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:this-tag-does-not-exist": failed to resolve image: docker.io/library/nginx:this-tag-does-not-exist: not found
+  Warning  Failed     11s   kubelet            spec.containers{app}: Error: ErrImagePull
+  Normal   BackOff    11s   kubelet            spec.containers{app}: Back-off pulling image "nginx:this-tag-does-not-exist"
+  Warning  Failed     11s   kubelet            spec.containers{app}: Error: ImagePullBackOff
++ kubectl -n mini-verify set image pod/project-broken-pod app=nginx:1.27-alpine
+pod/project-broken-pod image updated
++ kubectl -n mini-verify wait --for=condition=Ready pod/project-broken-pod --timeout=120s
+pod/project-broken-pod condition met
++ kubectl -n mini-verify rollout status deploy/troubleshooting-app --timeout=120s
+deployment "troubleshooting-app" successfully rolled out
++ kubectl -n mini-verify get pods,svc,endpointslices
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/project-broken-pod                     1/1     Running   0          18s
+pod/troubleshooting-app-59d4957864-9nt2x   1/1     Running   0          17s
+pod/troubleshooting-app-59d4957864-vvrj7   1/1     Running   0          17s
+
+NAME                              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+service/troubleshooting-service   ClusterIP   10.109.78.123   <none>        80/TCP    17s
+
+NAME                                                           ADDRESSTYPE   PORTS   ENDPOINTS                   AGE
+endpointslice.discovery.k8s.io/troubleshooting-service-j4jk6   IPv4          80      192.168.0.58,192.168.0.59   17s
++ kubectl -n mini-verify exec deploy/troubleshooting-app -- curl -sf http://troubleshooting-service
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
++ kubectl -n mini-verify top pods
+error: metrics not available yet
++ kubectl -n mini-verify exec deploy/troubleshooting-app -- cat /etc/resolv.conf
+search mini-verify.svc.cluster.local svc.cluster.local cluster.local
+nameserver 10.96.0.10
+options ndots:5
++ kubectl delete ns mini-verify --wait=false
+namespace "mini-verify" deleted

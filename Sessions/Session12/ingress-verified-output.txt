@@ -1,0 +1,87 @@
++ kubectl create ns ingress-check
+namespace/ingress-check created
++ kubectl -n ingress-check create deploy app --image=nginx:1.27-alpine
+deployment.apps/app created
++ kubectl -n ingress-check expose deploy app --port=80
+service/app exposed
++ kubectl -n ingress-check rollout status deploy/app --timeout=120s
+Waiting for deployment "app" rollout to finish: 0 of 1 updated replicas are available...
+deployment "app" successfully rolled out
++ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.13.2/deploy/static/provider/baremetal/deploy.yaml
+namespace/ingress-nginx created
+serviceaccount/ingress-nginx created
+serviceaccount/ingress-nginx-admission created
+role.rbac.authorization.k8s.io/ingress-nginx created
+role.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx unchanged
+clusterrole.rbac.authorization.k8s.io/ingress-nginx-admission unchanged
+rolebinding.rbac.authorization.k8s.io/ingress-nginx created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx unchanged
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx-admission unchanged
+configmap/ingress-nginx-controller created
+service/ingress-nginx-controller created
+service/ingress-nginx-controller-admission created
+deployment.apps/ingress-nginx-controller created
+job.batch/ingress-nginx-admission-create created
+job.batch/ingress-nginx-admission-patch created
+ingressclass.networking.k8s.io/nginx unchanged
+validatingwebhookconfiguration.admissionregistration.k8s.io/ingress-nginx-admission configured
++ kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller --timeout=180s
+Waiting for deployment "ingress-nginx-controller" rollout to finish: 0 of 1 updated replicas are available...
+deployment "ingress-nginx-controller" successfully rolled out
++ kubectl -n ingress-nginx wait --for=condition=complete job/ingress-nginx-admission-create job/ingress-nginx-admission-patch --timeout=120s
+Error from server (NotFound): jobs.batch "ingress-nginx-admission-create" not found
+Error from server (NotFound): jobs.batch "ingress-nginx-admission-patch" not found
++ cat
++ kubectl -n ingress-check apply -f /root/rebuild/Sessions/Session12/ingress-verified.yaml
+ingress.networking.k8s.io/verified created
++ kubectl -n ingress-check get ingress
+NAME       CLASS   HOSTS        ADDRESS   PORTS   AGE
+verified   nginx   demo.local             80      0s
++ pf=37020
++ kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 19080:80
+++ seq 1 30
++ for i in $(seq 1 30)
+++ curl -s -o /root/ingress-page.html -w '%{http_code}' -H 'Host: demo.local' http://localhost:19080
++ code=000
++ echo 'route status=000'
+route status=000
++ '[' 000 = 200 ']'
++ sleep 2
++ for i in $(seq 1 30)
+++ curl -s -o /root/ingress-page.html -w '%{http_code}' -H 'Host: demo.local' http://localhost:19080
++ code=200
++ echo 'route status=200'
+route status=200
++ '[' 200 = 200 ']'
++ break
++ head -8 /root/ingress-page.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
++ kubectl -n ingress-check patch svc app -p '{"spec":{"selector":{"app":"wrong"}}}'
+service/app patched
++ sleep 5
++ kubectl -n ingress-check get endpointslices
+NAME        ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+app-p8ksn   IPv4          <unset>   <unset>     23s
++ curl -s -o /dev/null -w 'Broken route: %{http_code}\n' -H 'Host: demo.local' http://localhost:19080
+Broken route: 503
++ kubectl -n ingress-check patch svc app -p '{"spec":{"selector":{"app":"app"}}}'
+service/app patched
++ sleep 5
++ kubectl -n ingress-check get endpointslices
+NAME        ADDRESSTYPE   PORTS   ENDPOINTS      AGE
+app-p8ksn   IPv4          80      192.168.0.45   28s
++ curl -s -o /dev/null -w 'Fixed route: %{http_code}\n' -H 'Host: demo.local' http://localhost:19080
+Fixed route: 200
++ kill 37020
++ kubectl delete ns ingress-check ingress-nginx --timeout=90s
+namespace "ingress-check" deleted
+namespace "ingress-nginx" deleted

@@ -1,0 +1,206 @@
++ cd /root/rebuild/Sessions/Session10
++ k create deploy client --image=busybox:1.36 -- sleep 900
++ kubectl -n traffic-verify create deploy client --image=busybox:1.36 -- sleep 900
+deployment.apps/client created
++ k rollout status deploy/client --timeout=120s
++ kubectl -n traffic-verify rollout status deploy/client --timeout=120s
+Waiting for deployment "client" rollout to finish: 0 out of 1 new replicas have been updated...
+Waiting for deployment "client" rollout to finish: 0 of 1 updated replicas are available...
+deployment "client" successfully rolled out
++ k apply -f 02-blue-green/deployment-blue.yaml -f 02-blue-green/deployment-green.yaml -f 02-blue-green/service-blue.yaml
++ kubectl -n traffic-verify apply -f 02-blue-green/deployment-blue.yaml -f 02-blue-green/deployment-green.yaml -f 02-blue-green/service-blue.yaml
+deployment.apps/app-blue created
+deployment.apps/app-green created
+service/myapp-service created
++ k rollout status deploy/app-blue --timeout=120s
++ kubectl -n traffic-verify rollout status deploy/app-blue --timeout=120s
+Waiting for deployment "app-blue" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-blue" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-blue" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-blue" successfully rolled out
++ k rollout status deploy/app-green --timeout=120s
++ kubectl -n traffic-verify rollout status deploy/app-green --timeout=120s
+Waiting for deployment "app-green" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-green" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-green" successfully rolled out
++ http http://myapp-service
++ k exec deploy/client -- wget -qO- http://myapp-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-service
+<html><body style="background:#003566;color:#ffd60a;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>BLUE ENVIRONMENT</p>
+<p style="font-size:0.5em">Version: v1 | Slot: BLUE (LIVE)</p>
+</body></html>
++ k apply -f 02-blue-green/service-green.yaml
++ kubectl -n traffic-verify apply -f 02-blue-green/service-green.yaml
+service/myapp-service configured
++ sleep 3
++ http http://myapp-service
++ k exec deploy/client -- wget -qO- http://myapp-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-service
+<html><body style="background:#1b4332;color:#95d5b2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>GREEN ENVIRONMENT</p>
+<p style="font-size:0.5em">Version: v2 | Slot: GREEN (STANDBY -> PROMOTED)</p>
+</body></html>
++ k get endpointslices -o wide
++ kubectl -n traffic-verify get endpointslices -o wide
+NAME                  ADDRESSTYPE   PORTS   ENDPOINTS                                  AGE
+myapp-service-fwnkp   IPv4          80      192.168.0.164,192.168.0.214,192.168.0.61   28s
++ k delete -f 02-blue-green --wait=false
++ kubectl -n traffic-verify delete -f 02-blue-green --wait=false
+deployment.apps "app-blue" deleted from traffic-verify namespace
+deployment.apps "app-green" deleted from traffic-verify namespace
+service "myapp-service" deleted from traffic-verify namespace
+Error from server (NotFound): error when deleting "02-blue-green/service-green.yaml": services "myapp-service" not found
++ k apply -f 03-canary
++ kubectl -n traffic-verify apply -f 03-canary
+deployment.apps/app-canary created
+deployment.apps/app-stable created
+service/myapp-canary-service created
++ k rollout status deploy/app-stable --timeout=120s
++ kubectl -n traffic-verify rollout status deploy/app-stable --timeout=120s
+Waiting for deployment "app-stable" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-stable" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-stable" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-stable" successfully rolled out
++ k rollout status deploy/app-canary --timeout=120s
++ kubectl -n traffic-verify rollout status deploy/app-canary --timeout=120s
+deployment "app-canary" successfully rolled out
++ k get pods -L version
++ kubectl -n traffic-verify get pods -L version
+NAME                          READY   STATUS    RESTARTS   AGE   VERSION
+app-canary-5849994497-jfgqz   1/1     Running   0          12s   v2
+app-stable-6ffb777f9d-97zq5   1/1     Running   0          11s   v1
+app-stable-6ffb777f9d-hzfg6   1/1     Running   0          12s   v1
+app-stable-6ffb777f9d-z767d   1/1     Running   0          11s   v1
+client-574dd5f86b-rvc2t       1/1     Running   0          45s   
+++ seq 1 16
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#7b2d00;color:#ffd60a;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>CANARY v2</p>
+<p style="font-size:0.4em;color:#ff9f1c">Track: canary | 10% of traffic (1 of 10 pods)</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#1a1a2e;color:#e2e2e2;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>STABLE v1</p>
+<p style="font-size:0.4em;color:#888">Track: stable | 90% of traffic</p>
+</body></html>
++ for i in $(seq 1 16)
++ http http://myapp-canary-service
++ k exec deploy/client -- wget -qO- http://myapp-canary-service
++ kubectl -n traffic-verify exec deploy/client -- wget -qO- http://myapp-canary-service
+<html><body style="background:#7b2d00;color:#ffd60a;font-family:monospace;font-size:3em;text-align:center;padding-top:20vh">
+<p>CANARY v2</p>
+<p style="font-size:0.4em;color:#ff9f1c">Track: canary | 10% of traffic (1 of 10 pods)</p>
+</body></html>
++ kubectl delete ns traffic-verify --wait=false
+namespace "traffic-verify" deleted

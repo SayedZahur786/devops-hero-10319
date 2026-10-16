@@ -1,0 +1,403 @@
++ kubectl create ns hpa-verify
+namespace/hpa-verify created
++ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+serviceaccount/metrics-server unchanged
+clusterrole.rbac.authorization.k8s.io/system:aggregated-metrics-reader unchanged
+clusterrole.rbac.authorization.k8s.io/system:metrics-server unchanged
+rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader unchanged
+clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator unchanged
+clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server unchanged
+service/metrics-server unchanged
+deployment.apps/metrics-server configured
+apiservice.apiregistration.k8s.io/v1beta1.metrics.k8s.io unchanged
++ kubectl -n kube-system patch deploy metrics-server --type=json -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"},{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/cpu","value":"30m"}]'
+deployment.apps/metrics-server patched
++ kubectl -n kube-system rollout status deploy/metrics-server --timeout=180s
+Waiting for deployment "metrics-server" rollout to finish: 1 old replicas are pending termination...
+deployment "metrics-server" successfully rolled out
+++ date +%s
++ stop=1791547334
+++ date +%s
++ start=1791547154
++ cat
++ kubectl -n hpa-verify apply -f /root/rebuild/Sessions/Session13/cpu-hpa-verified.yaml
+deployment.apps/cpu-demo created
+horizontalpodautoscaler.autoscaling/cpu-demo created
++ kubectl -n hpa-verify rollout status deploy/cpu-demo --timeout=120s
+Waiting for deployment "cpu-demo" rollout to finish: 0 of 1 updated replicas are available...
+deployment "cpu-demo" successfully rolled out
+++ seq 1 35
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:57:47+00:00
++ kubectl -n hpa-verify get hpa
+NAME       REFERENCE             TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: <unknown>/50%   1         3         1          3s
++ kubectl -n hpa-verify get pods -l app=cpu-demo
+NAME                       READY   STATUS    RESTARTS   AGE
+cpu-demo-544866846-htqdt   1/1     Running   0          3s
++ kubectl -n hpa-verify top pods -l app=cpu-demo
+error: metrics not available yet
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:58:03+00:00
++ kubectl -n hpa-verify get hpa
+NAME       REFERENCE             TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: <unknown>/50%   1         3         1          18s
++ kubectl -n hpa-verify get pods -l app=cpu-demo
+NAME                       READY   STATUS    RESTARTS   AGE
+cpu-demo-544866846-htqdt   1/1     Running   0          18s
++ kubectl -n hpa-verify top pods -l app=cpu-demo
+error: metrics not available yet
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:58:18+00:00
++ kubectl -n hpa-verify get hpa
+NAME       REFERENCE             TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: <unknown>/50%   1         3         1          33s
++ kubectl -n hpa-verify get pods -l app=cpu-demo
+NAME                       READY   STATUS    RESTARTS   AGE
+cpu-demo-544866846-htqdt   1/1     Running   0          34s
++ kubectl -n hpa-verify top pods -l app=cpu-demo
+NAME                       CPU(cores)   MEMORY(bytes)   
+cpu-demo-544866846-htqdt   2m           0Mi             
++ sleep 15
+pp=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   2m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:58:19+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 6%/50%   1         3         1          50s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          49s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   2m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:58:35+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 6%/50%   1         3         1          65s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          64s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   2m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:58:50+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 6%/50%   1         3         1          80s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          79s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   2m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:59:05+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 6%/50%   1         3         1          95s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          94s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   2m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:59:20+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 206%/50%   1         3         1          110s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          5s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          5s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          110s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   62m          0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:59:36+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 653%/50%   1         3         3          2m6s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          20s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          20s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          2m5s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   196m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T11:59:51+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 660%/50%   1         3         3          2m21s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          35s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          35s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          2m20s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   199m         0Mi             
+cpu-demo-66f54789fd-qdx4r   196m         0Mi             
+cpu-demo-66f54789fd-t4vtt   197m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:00:06+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 665%/50%   1         3         3          2m36s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          51s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          51s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          2m36s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   199m         0Mi             
+cpu-demo-66f54789fd-qdx4r   199m         0Mi             
+cpu-demo-66f54789fd-t4vtt   201m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:00:22+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 661%/50%   1         3         3          2m52s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          66s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          66s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          2m51s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   198m         0Mi             
+cpu-demo-66f54789fd-qdx4r   199m         0Mi             
+cpu-demo-66f54789fd-t4vtt   198m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:00:37+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 653%/50%   1         3         3          3m7s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          81s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          81s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          3m6s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   198m         0Mi             
+cpu-demo-66f54789fd-qdx4r   192m         0Mi             
+cpu-demo-66f54789fd-t4vtt   198m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:00:52+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 656%/50%   1         3         3          3m23s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          97s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          97s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          3m22s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   194m         0Mi             
+cpu-demo-66f54789fd-qdx4r   201m         0Mi             
+cpu-demo-66f54789fd-t4vtt   196m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:01:08+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 661%/50%   1         3         3          3m38s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          112s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          112s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          3m37s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   198m         0Mi             
+cpu-demo-66f54789fd-qdx4r   198m         0Mi             
+cpu-demo-66f54789fd-t4vtt   199m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:01:23+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 616%/50%   1         3         3          3m53s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          2m8s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          2m8s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          3m53s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   187m         0Mi             
+cpu-demo-66f54789fd-qdx4r   182m         0Mi             
+cpu-demo-66f54789fd-t4vtt   186m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:01:39+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 662%/50%   1         3         3          4m9s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          2m23s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          2m23s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          4m8s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   199m         0Mi             
+cpu-demo-66f54789fd-qdx4r   199m         0Mi             
+cpu-demo-66f54789fd-t4vtt   198m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:01:54+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 657%/50%   1         3         3          4m24s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          2m38s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          2m38s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          4m23s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   197m         0Mi             
+cpu-demo-66f54789fd-qdx4r   197m         0Mi             
+cpu-demo-66f54789fd-t4vtt   198m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:02:09+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 658%/50%   1         3         3          4m39s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          2m53s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          2m53s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          4m38s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   200m         0Mi             
+cpu-demo-66f54789fd-qdx4r   198m         0Mi             
+cpu-demo-66f54789fd-t4vtt   195m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:02:25+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 417%/50%   1         3         3          4m55s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          3m9s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          3m9s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          4m54s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   128m         0Mi             
+cpu-demo-66f54789fd-qdx4r   143m         0Mi             
+cpu-demo-66f54789fd-t4vtt   105m         0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:02:40+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 0%/50%   1         3         3          5m10s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Running   0          3m24s
+cpu-demo-66f54789fd-qdx4r   1/1     Running   0          3m24s
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          5m9s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   0m           0Mi             
+cpu-demo-66f54789fd-qdx4r   0m           0Mi             
+cpu-demo-66f54789fd-t4vtt   0m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:02:55+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 0%/50%   1         3         3          5m25s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS        RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Terminating   0          3m39s
+cpu-demo-66f54789fd-qdx4r   1/1     Terminating   0          3m39s
+cpu-demo-66f54789fd-t4vtt   1/1     Running       0          5m24s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   0m           0Mi             
+cpu-demo-66f54789fd-qdx4r   0m           0Mi             
+cpu-demo-66f54789fd-t4vtt   0m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:03:10+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 0%/50%   1         3         1          5m40s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS        RESTARTS   AGE
+cpu-demo-66f54789fd-cdcpc   1/1     Terminating   0          3m54s
+cpu-demo-66f54789fd-qdx4r   1/1     Terminating   0          3m54s
+cpu-demo-66f54789fd-t4vtt   1/1     Running       0          5m39s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-cdcpc   0m           0Mi             
+cpu-demo-66f54789fd-qdx4r   0m           0Mi             
+cpu-demo-66f54789fd-t4vtt   0m           0Mi             
++ sleep 15
++ for i in $(seq 1 35)
++ date -Is
+2026-10-09T12:03:25+00:00
++ kubectl -n hpa-recovered get hpa
+NAME       REFERENCE             TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+cpu-demo   Deployment/cpu-demo   cpu: 0%/50%   1         3         1          5m55s
++ kubectl -n hpa-recovered get pods -l app=cpu-demo
+NAME                        READY   STATUS    RESTARTS   AGE
+cpu-demo-66f54789fd-t4vtt   1/1     Running   0          5m54s
++ kubectl -n hpa-recovered top pods -l app=cpu-demo
+NAME                        CPU(cores)   MEMORY(bytes)   
+cpu-demo-66f54789fd-t4vtt   0m           0Mi             
++ sleep 15

@@ -1,0 +1,6 @@
+Python 3.10.12
+pytest 8.4.2
+bandit 1.9.4
+  python version = 3.10.12 (main, Aug 31 2026, 10:18:17) [GCC 11.4.0]
+pip-audit 2.10.1
+8.30.1

@@ -1,0 +1,30 @@
++ docker run -d --name apache-host --network host httpd:2.4-alpine
+13c3c8b138ca68590f65117631a227f9eae83d07cb7b59bafc31e1490a33cc68
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (7) Failed to connect to localhost port 80 after 1 ms: Couldn't connect to server
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   191  100   191    0     0   112k      0 --:--:-- --:--:-- --:--:--  186k
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>It works! Apache httpd</title>
+</head>
+<body>
+<p>It works!</p>
+</body>
+</html>
++ break
++ docker ps --filter name=apache-host
+CONTAINER ID   IMAGE              COMMAND              CREATED        STATUS        PORTS     NAMES
+13c3c8b138ca   httpd:2.4-alpine   "httpd-foreground"   1 second ago   Up 1 second             apache-host
++ docker rm -f apache-host
+apache-host

@@ -1,0 +1,140 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-10-09T11:45:07Z"
+    labels:
+      app: external
+    name: external
+    namespace: rebuild
+    resourceVersion: "81917"
+    uid: 2347c25f-ffd6-48bf-87b0-d9767964dd59
+  spec:
+    externalName: example.com
+    selector:
+      app: external
+    sessionAffinity: None
+    type: ExternalName
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-10-09T11:45:07Z"
+    labels:
+      app: web
+    name: headless
+    namespace: rebuild
+    resourceVersion: "81918"
+    uid: f1a82304-71b8-453d-8cee-c0ebaaad8aa2
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: web
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-10-09T11:45:07Z"
+    labels:
+      app: web
+    name: web-clusterip
+    namespace: rebuild
+    resourceVersion: "81903"
+    uid: a970a8c4-d9f6-420a-aea0-ff71f4cfb699
+  spec:
+    clusterIP: 10.98.228.27
+    clusterIPs:
+    - 10.98.228.27
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: web
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-10-09T11:45:07Z"
+    labels:
+      app: web
+    name: web-loadbalancer
+    namespace: rebuild
+    resourceVersion: "81913"
+    uid: 030f86a8-d1be-4968-9deb-7f60b104e5ad
+  spec:
+    allocateLoadBalancerNodePorts: true
+    clusterIP: 10.106.203.182
+    clusterIPs:
+    - 10.106.203.182
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - nodePort: 32536
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: web
+    sessionAffinity: None
+    type: LoadBalancer
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    creationTimestamp: "2026-10-09T11:45:07Z"
+    labels:
+      app: web
+    name: web-nodeport
+    namespace: rebuild
+    resourceVersion: "81908"
+    uid: 21d59fcf-9fda-4096-8a35-71b8b95194f0
+  spec:
+    clusterIP: 10.98.51.96
+    clusterIPs:
+    - 10.98.51.96
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - nodePort: 30654
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: web
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

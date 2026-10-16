@@ -1,0 +1,185 @@
++ s4
++ cd /root/rebuild/Sessions/Session4
++ ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute 
+       valid_lft forever preferred_lft forever
+2: enp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc fq_codel state UP group default qlen 1000
+    link/ether 4a:d9:39:04:a6:40 brd ff:ff:ff:ff:ff:ff
+    inet 172.30.1.2/24 brd 172.30.1.255 scope global dynamic noprefixroute enp1s0
+       valid_lft 86272897sec preferred_lft 75483697sec
+    inet6 fe80::fabf:3aed:a757:e0f2/64 scope link 
+       valid_lft forever preferred_lft forever
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1454 qdisc noqueue state UP group default 
+    link/ether 36:bf:be:6c:a8:a4 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::34bf:beff:fe6c:a8a4/64 scope link tentative 
+       valid_lft forever preferred_lft forever
+4: cilium_net@cilium_host: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default 
+    link/ether 32:b8:a3:d8:45:b5 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::30b8:a3ff:fed8:45b5/64 scope link 
+       valid_lft forever preferred_lft forever
+5: cilium_host@cilium_net: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default qlen 1000
+    link/ether 32:c5:d9:22:57:d1 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.69/32 scope global cilium_host
+       valid_lft forever preferred_lft forever
+    inet6 fe80::30c5:d9ff:fe22:57d1/64 scope link 
+       valid_lft forever preferred_lft forever
+6: cilium_vxlan: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UNKNOWN group default 
+    link/ether ae:ef:f6:23:0f:59 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::acef:f6ff:fe23:f59/64 scope link 
+       valid_lft forever preferred_lft forever
+8: lxcb96bc8c0e0b4@if7: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default qlen 1000
+    link/ether 36:18:7a:33:9d:f6 brd ff:ff:ff:ff:ff:ff link-netns cni-4a871e57-d004-e9ae-ddfb-5872de978efd
+    inet6 fe80::3418:7aff:fe33:9df6/64 scope link 
+       valid_lft forever preferred_lft forever
+10: lxc2b6b98a9f45d@if9: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default qlen 1000
+    link/ether 86:17:e9:d8:fc:10 brd ff:ff:ff:ff:ff:ff link-netns cni-2cc74703-aa4c-a802-719b-b6ac25a9453d
+    inet6 fe80::8417:e9ff:fed8:fc10/64 scope link 
+       valid_lft forever preferred_lft forever
+12: lxc7e5b0ac03217@if11: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1400 qdisc noqueue state UP group default qlen 1000
+    link/ether 46:99:ba:56:ae:68 brd ff:ff:ff:ff:ff:ff link-netns cni-93791ebd-481c-cbfe-2137-dce910f8bfc0
+    inet6 fe80::4499:baff:fe56:ae68/64 scope link 
+       valid_lft forever preferred_lft forever
+13: br-878bcd49a6f5: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1454 qdisc noqueue state DOWN group default 
+    link/ether 52:ea:e8:f7:b3:87 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.49.1/24 brd 192.168.49.255 scope global br-878bcd49a6f5
+       valid_lft forever preferred_lft forever
+14: veth138e7c4@if2: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1454 qdisc noqueue master docker0 state UP group default 
+    link/ether 66:2b:93:2f:12:65 brd ff:ff:ff:ff:ff:ff link-netnsid 3
+    inet6 fe80::642b:93ff:fe2f:1265/64 scope link tentative 
+       valid_lft forever preferred_lft forever
++ ip route
+default via 172.30.1.1 dev enp1s0 proto dhcp src 172.30.1.2 metric 1002 mtu 1450 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+172.30.1.0/24 dev enp1s0 proto dhcp scope link src 172.30.1.2 metric 1002 mtu 1450 
+192.168.0.0/24 via 192.168.0.69 dev cilium_host proto kernel src 192.168.0.69 
+192.168.0.69 dev cilium_host proto kernel scope link 
+192.168.49.0/24 dev br-878bcd49a6f5 proto kernel scope link src 192.168.49.1 linkdown 
++ ss -tuln
+Netid State  Recv-Q Send-Q                      Local Address:Port  Peer Address:PortProcess
+udp   UNCONN 0      0                                 0.0.0.0:5353       0.0.0.0:*          
+udp   UNCONN 0      0                              127.0.0.54:53         0.0.0.0:*          
+udp   UNCONN 0      0                           127.0.0.53%lo:53         0.0.0.0:*          
+udp   UNCONN 0      0                              172.30.1.2:68         0.0.0.0:*          
+udp   UNCONN 0      0                       172.30.1.2%enp1s0:68         0.0.0.0:*          
+udp   UNCONN 0      0                                 0.0.0.0:45128      0.0.0.0:*          
+udp   UNCONN 0      0                               127.0.0.1:43683      0.0.0.0:*          
+udp   UNCONN 0      0                                 0.0.0.0:4789       0.0.0.0:*          
+udp   UNCONN 0      0                                    [::]:5353          [::]:*          
+udp   UNCONN 0      0                                    [::]:46767         [::]:*          
+udp   UNCONN 0      0      [fe80::fabf:3aed:a757:e0f2]%enp1s0:546           [::]:*          
+udp   UNCONN 0      0                                    [::]:4789          [::]:*          
+tcp   LISTEN 0      4096                            127.0.0.1:9879       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:9878       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:9891       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:9890       0.0.0.0:*          
+tcp   LISTEN 0      100                               0.0.0.0:25         0.0.0.0:*          
+tcp   LISTEN 0      4096                              0.0.0.0:22         0.0.0.0:*          
+tcp   LISTEN 0      4096                           127.0.0.54:53         0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:9234       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:44417      0.0.0.0:*          
+tcp   LISTEN 0      4096                        127.0.0.53%lo:53         0.0.0.0:*          
+tcp   LISTEN 0      4096                           172.30.1.2:4240       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:43683      0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:631        0.0.0.0:*          
+tcp   LISTEN 0      4096                           172.30.1.2:2380       0.0.0.0:*          
+tcp   LISTEN 0      4096                           172.30.1.2:2379       0.0.0.0:*          
+tcp   LISTEN 0      128                               0.0.0.0:40200      0.0.0.0:*          
+tcp   LISTEN 0      511                               0.0.0.0:40205      0.0.0.0:*          
+tcp   LISTEN 0      4096                              0.0.0.0:9964       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:10257      0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:10259      0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:10248      0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:2379       0.0.0.0:*          
+tcp   LISTEN 0      4096                            127.0.0.1:2381       0.0.0.0:*          
+tcp   LISTEN 0      4096                                    *:10250            *:*          
+tcp   LISTEN 0      100                                  [::]:25            [::]:*          
+tcp   LISTEN 0      4096                                 [::]:22            [::]:*          
+tcp   LISTEN 0      4096                                    *:6443             *:*          
+tcp   LISTEN 0      4096                                [::1]:631           [::]:*          
+tcp   LISTEN 0      4096                                    *:40300            *:*          
+tcp   LISTEN 0      4096                                    *:40305            *:*          
+tcp   LISTEN 0      4096                                    *:9963             *:*          
++ ping -c 2 127.0.0.1
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.035 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.043 ms
+
+--- 127.0.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1023ms
+rtt min/avg/max/mdev = 0.035/0.039/0.043/0.004 ms
++ getent hosts github.com
+140.82.113.3    github.com
++ curl -I --max-time 15 https://github.com
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0HTTP/2 200 
+date: Fri, 09 Oct 2026 11:40:08 GMT
+content-type: text/html; charset=utf-8
+content-language: en-US
+vary: X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With, X-GitHub-Client-Version, Accept-Language, Sec-Fetch-Site,Accept-Encoding, Accept, X-Requested-With
+etag: W/"1632c832361dd4eb1a20cf206cc5c7b2"
+cache-control: max-age=0, private, must-revalidate
+strict-transport-security: max-age=31536000; includeSubdomains; preload
+x-frame-options: deny
+x-content-type-options: nosniff
+x-xss-protection: 0
+referrer-policy: origin-when-cross-origin, strict-origin-when-cross-origin
+content-security-policy: default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/; connect-src 'self' uploads.github.com www.githubstatus.com collector.github.com raw.githubusercontent.com api.github.com github-cloud.s3.amazonaws.com github-production-repository-file-5c1aeb.s3.amazonaws.com github-production-upload-manifest-file-7fdce7.s3.amazonaws.com github-production-user-asset-6210df.s3.amazonaws.com *.rel.tunnels.api.visualstudio.com wss://*.rel.tunnels.api.visualstudio.com github.githubassets.com objects-origin.githubusercontent.com copilot-proxy.githubusercontent.com proxy.individual.githubcopilot.com proxy.business.githubcopilot.com proxy.enterprise.githubcopilot.com *.actions.githubusercontent.com wss://*.actions.githubusercontent.com productionresultssa0.blob.core.windows.net productionresultssa1.blob.core.windows.net productionresultssa2.blob.core.windows.net productionresultssa3.blob.core.windows.net productionresultssa4.blob.core.windows.net productionresultssa5.blob.core.windows.net productionresultssa6.blob.core.windows.net productionresultssa7.blob.core.windows.net productionresultssa8.blob.core.windows.net productionresultssa9.blob.core.windows.net productionresultssa10.blob.core.windows.net productionresultssa11.blob.core.windows.net productionresultssa12.blob.core.windows.net productionresultssa13.blob.core.windows.net productionresultssa14.blob.core.windows.net productionresultssa15.blob.core.windows.net productionresultssa16.blob.core.windows.net productionresultssa17.blob.core.windows.net productionresultssa18.blob.core.windows.net productionresultssa19.blob.core.windows.net github-production-repository-image-32fea6.s3.amazonaws.com github-production-release-asset-2e65be.s3.amazonaws.com insights.github.com wss://alive.github.com wss://alive-staging.github.com api.githubcopilot.com api.individual.githubcopilot.com api.business.githubcopilot.com api.enterprise.githubcopilot.com wss://production-copilot-host.webpubsub.azure.com api.github.com/cmc_internal/api/ edge.fullstory.com rs.fullstory.com; font-src github.githubassets.com; form-action 'self' github.com gist.github.com copilot-workspace.githubnext.com objects-origin.githubusercontent.com; frame-ancestors 'none'; frame-src viewscreen.githubusercontent.com notebooks.githubusercontent.com www.youtube-nocookie.com; img-src 'self' data: blob: github.githubassets.com media.githubusercontent.com camo.githubusercontent.com identicons.github.com avatars.githubusercontent.com private-avatars.githubusercontent.com github-cloud.s3.amazonaws.com objects.githubusercontent.com release-assets.githubusercontent.com secured-user-images.githubusercontent.com user-images.githubusercontent.com private-user-images.githubusercontent.com opengraph.githubassets.com repository-images.githubusercontent.com marketplace-screenshots.githubusercontent.com copilotprodattachments.blob.core.windows.net/github-production-copilot-attachments/ github-production-user-asset-6210df.s3.amazonaws.com customer-stories-feed.github.com spotlights-feed.github.com explore-feed.github.com *.googleusercontent.com objects-origin.githubusercontent.com *.githubusercontent.com images.ctfassets.net/8aevphvgewt8/; manifest-src 'self'; media-src github.com user-images.githubusercontent.com secured-user-images.githubusercontent.com private-user-images.githubusercontent.com github-production-user-asset-62  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+10df.s3.amazonaws.com gist.github.com github.githubassets.com assets.ctfassets.net/8aevphvgewt8/ videos.ctfassets.net/8aevphvgewt8/; script-src github.githubassets.com 'sha256-tSjmyPUky1KbRZ0fw9VUil3wFEbeM82rtbJDygGJAXw='; style-src 'unsafe-inline' github.githubassets.com; upgrade-insecure-requests; worker-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets/ gist.github.com/assets-cdn/worker/
+server: github.com
+accept-ranges: bytes
+set-cookie: _gh_sess=qe4X0C4dsj9%2BpjYndZMlc8r2hsSOvDD0QpsODDEBvsrsn27DGmR%2F9VGW%2F9P%2FrOjy5y6OiBvC0A0OoyxFApeCQ4uCIFBudlSia9Phmz2g%2BtY8%2Fdvp2o0F7dMf0TayFDbnxa%2Fkn3J41DC2wupo00dRv%2BlsVT1PnV69B2%2Bc1%2BYIFezMVdauLUbcoZMNuktgB4FWuJXUk5N0W3w%2Bzw6%2BlRfvVHVLg%2BfX%2F8EExufT6oeOJxaX4IxJxLC0DpQ8jRZopgaHx5tEZI22arPxrQdchrzBLQ%3D%3D--AjkLa6iqRowoHVmS--yAerbfq%2F3cwCDI2S%2FVataw%3D%3D; path=/; HttpOnly; secure; SameSite=Lax
+set-cookie: _octo=GH1.1.1979032362.1791546016; expires=Sat, 09 Oct 2027 11:40:16 GMT; domain=.github.com; path=/; secure; SameSite=Lax
+set-cookie: logged_in=no; expires=Sat, 09 Oct 2027 11:40:16 GMT; domain=.github.com; path=/; HttpOnly; secure; SameSite=Lax
+x-github-request-id: A9DC:19302D:179D49:20873E:6AC8D2A0
+x-github-edge-region: iad
+
++ cat /etc/resolv.conf
+# This is /run/systemd/resolve/resolv.conf managed by man:systemd-resolved(8).
+# Do not edit.
+#
+# This file might be symlinked as /etc/resolv.conf. If you're looking at
+# /etc/resolv.conf and seeing this text, you have followed the symlink.
+#
+# This is a dynamic resolv.conf file for connecting local clients directly to
+# all known uplink DNS servers. This file lists all configured search domains.
+#
+# Third party programs should typically not access this file directly, but only
+# through the symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a
+# different way, replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.service(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 8.8.8.8
+nameserver 1.1.1.1
+search .
++ command -v dig
+/usr/bin/dig
++ dig github.com
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> github.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59030
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;github.com.			IN	A
+
+;; ANSWER SECTION:
+github.com.		29	IN	A	140.82.113.3
+
+;; Query time: 0 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8) (UDP)
+;; WHEN: Fri Oct 09 11:40:16 UTC 2026
+;; MSG SIZE  rcvd: 55
+

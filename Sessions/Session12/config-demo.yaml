@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: config-demo
+spec:
+  containers:
+  - name: demo
+    image: busybox:1.36
+    command: [sh, -c, 'echo "$GREETING"; test -n "$TOKEN" && echo "Dummy secret injected"; sleep 300']
+    envFrom:
+    - configMapRef:
+        name: app-config
+    - secretRef:
+        name: demo-secret

@@ -1,0 +1,70 @@
++ s12
++ cd /root/rebuild/Sessions/Session1-2
++ echo lab-rebuild
++ ln original hard
++ ln -s original soft
++ ls -li original hard soft
+102396 -rw-r--r-- 2 root root 12 Oct  9 11:40 hard
+102396 -rw-r--r-- 2 root root 12 Oct  9 11:40 original
+102397 lrwxrwxrwx 1 root root  8 Oct  9 11:40 soft -> original
++ rm original
++ cat hard
+lab-rebuild
++ cat soft
+cat: soft: No such file or directory
++ true
++ rm hard soft
++ adduser --disabled-password --gecos 'Demo User' labdemo
+info: Adding user `labdemo' ...
+info: Selecting UID/GID from range 1000 to 59999 ...
+info: Adding new group `labdemo' (1001) ...
+info: Adding new user `labdemo' (1001) with group `labdemo (1001)' ...
+info: Creating home directory `/home/labdemo' ...
+info: Copying files from `/etc/skel' ...
+info: Adding new user `labdemo' to supplemental / extra groups `users' ...
+info: Adding user `labdemo' to group `users' ...
++ id labdemo
+uid=1001(labdemo) gid=1001(labdemo) groups=1001(labdemo),100(users)
++ journalctl -u ssh --no-pager -n 8
+Oct 09 11:40:14 controlplane adduser[18683]: Adding new user `labdemo' (1001) with group `labdemo (1001)' ...
+Oct 09 11:40:14 controlplane useradd[18694]: new user: name=labdemo, UID=1001, GID=1001, home=/home/labdemo, shell=/bin/bash, from=/dev/pts/7
+Oct 09 11:40:14 controlplane adduser[18683]: Creating home directory `/home/labdemo' ...
+Oct 09 11:40:14 controlplane adduser[18683]: Copying files from `/etc/skel' ...
+Oct 09 11:40:14 controlplane chfn[18708]: changed user 'labdemo' information
+Oct 09 11:40:14 controlplane adduser[18683]: Adding new user `labdemo' to supplemental / extra groups `users' ...
+Oct 09 11:40:14 controlplane adduser[18683]: Adding user `labdemo' to group `users' ...
+Oct 09 11:40:14 controlplane gpasswd[18717]: members of group users set by root to labdemo
++ pwd
+/root/rebuild/Sessions/Session1-2
++ ls -la
+total 12
+drwxr-xr-x 2 root root 4096 Oct  9 11:40 .
+drwxr-xr-x 3 root root 4096 Oct  9 11:40 ..
+-rw-r--r-- 1 root root 1839 Oct  9 11:40 output.txt
++ date
+Fri Oct  9 11:40:14 UTC 2026
++ whoami
+root
++ uname -a
+Linux controlplane 6.8.0-146-generic #146-Ubuntu SMP PREEMPT_DYNAMIC Thu Sep  3 16:12:30 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
++ df -h /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        19G   14G  5.1G  73% /
++ free -h
+               total        used        free      shared  buff/cache   available
+Mem:           3.8Gi       1.5Gi       417Mi       6.7Mi       2.2Gi       2.3Gi
+Swap:             0B          0B          0B
++ head -8
++ ps -ef
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 00:21 ?        00:00:04 /sbin/init
+root           2       0  0 00:21 ?        00:00:00 [kthreadd]
+root           3       2  0 00:21 ?        00:00:00 [pool_workqueue_release]
+root           4       2  0 00:21 ?        00:00:00 [kworker/R-rcu_g]
+root           5       2  0 00:21 ?        00:00:00 [kworker/R-rcu_p]
+root           6       2  0 00:21 ?        00:00:00 [kworker/R-slub_]
+root           7       2  0 00:21 ?        00:00:00 [kworker/R-netns]
++ grep -n labdemo /etc/passwd
+47:labdemo:x:1001:1001:Demo User,,,:/home/labdemo:/bin/bash
++ userdel -r labdemo
+userdel: labdemo mail spool (/var/mail/labdemo) not found

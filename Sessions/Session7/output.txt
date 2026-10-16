@@ -1,0 +1,71 @@
++ s7
++ cd /root/rebuild/Sessions/Session7
++ cp -r /root/course/session6-7-docker/multi-stage-dockerfile .
++ docker build -t rebuild-multistage multi-stage-dockerfile
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 468B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/node:24-alpine
+#2 DONE 0.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [builder 1/5] FROM docker.io/library/node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 987B done
+#5 DONE 0.0s
+
+#6 [builder 2/5] WORKDIR /app
+#6 CACHED
+
+#7 [builder 5/5] COPY . .
+#7 CACHED
+
+#8 [production 3/5] COPY --from=builder /app/package*.json ./
+#8 CACHED
+
+#9 [builder 3/5] COPY package*.json ./
+#9 CACHED
+
+#10 [production 4/5] RUN npm install --omit=dev
+#10 CACHED
+
+#11 [builder 4/5] RUN npm install
+#11 CACHED
+
+#12 [production 5/5] COPY --from=builder /app/server.js ./
+#12 CACHED
+
+#13 exporting to image
+#13 exporting layers done
+#13 writing image sha256:2ca1b4bffcc4bf75a8f6a89dd539a4267b9710348b2df525afb5879c172b5144 done
+#13 naming to docker.io/library/rebuild-multistage done
+#13 DONE 0.0s
++ docker run -d --name multistage -p 8080:3000 rebuild-multistage
+bc06af81ef9c2e43d643a708e533049c72740443101a2466ba65ad9a42d1a108
+++ seq 1 20
++ for i in $(seq 1 20)
++ curl -f http://localhost:8080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (56) Recv failure: Connection reset by peer
++ sleep 1
++ for i in $(seq 1 20)
++ curl -f http://localhost:8080
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    51  100    51    0     0   3500      0 --:--:-- --:--:-- --:--:--  3642
+<h1>Hello World from Docker Multi-Stage Build!</h1>+ break
++ docker ps --filter name=multistage
+CONTAINER ID   IMAGE                COMMAND                  CREATED        STATUS        PORTS                                         NAMES
+bc06af81ef9c   rebuild-multistage   "docker-entrypoint.s…"   1 second ago   Up 1 second   0.0.0.0:8080->3000/tcp, [::]:8080->3000/tcp   multistage
++ docker rm -f multistage
+multistage

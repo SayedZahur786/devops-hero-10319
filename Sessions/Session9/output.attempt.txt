@@ -1,0 +1,51 @@
++ s9
++ /tmp/minikube status
+E1009 11:41:37.417011   22669 status.go:457] kubeconfig endpoint: get endpoint: "minikube" does not appear in /etc/kubernetes/admin.conf
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Misconfigured
+
+
+WARNING: Your kubectl is pointing to stale minikube-vm.
+To fix the kubectl context, run `minikube update-context`
++ /tmp/minikube kubectl -- get nodes -o wide
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- cluster-info
+error: cluster "minikube" does not exist
++ /tmp/minikube kubectl -- create deployment bootcamp --image=gcr.io/google-samples/kubernetes-bootcamp:v1
+error: cluster "minikube" does not exist
++ /tmp/minikube kubectl -- rollout status deployment/bootcamp --timeout=180s
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- expose deployment bootcamp --type=NodePort --port=8080
+error: cluster "minikube" does not exist
++ /tmp/minikube kubectl -- get pods,deploy,svc -o wide
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- scale deploy bootcamp --replicas=2
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- rollout status deployment/bootcamp --timeout=120s
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- set image deploy/bootcamp kubernetes-bootcamp=jocatalin/kubernetes-bootcamp:v2
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- rollout undo deploy/bootcamp
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- rollout status deploy/bootcamp --timeout=180s
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- get deploy bootcamp -o 'jsonpath={.spec.template.spec.containers[*].image}'
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- exec deploy/bootcamp -- curl -s localhost:8080
+error: no server found for cluster "minikube"
++ /tmp/minikube kubectl -- delete deployment,svc bootcamp
+error: no server found for cluster "minikube"
++ /tmp/minikube stop
+* Stopping node "minikube"  ...
+* Powering off "minikube" via SSH ...
+* 1 node stopped.

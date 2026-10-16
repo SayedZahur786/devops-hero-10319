@@ -1,0 +1,1099 @@
++ s10
++ cd /root/rebuild/Sessions/Session10
++ cp -r /root/course/session10-k8s-core-objects/01-rolling-update /root/course/session10-k8s-core-objects/03-canary /root/course/session10-k8s-core-objects/04-recreate /root/course/session10-k8s-core-objects/pod-lifecycle .
++ cp -r /root/course/session10-k8s-core-objects/02-blue-green .
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created
++ sed -i 's/replicas: 4/replicas: 2/g' 01-rolling-update/deployment-v1.yaml 01-rolling-update/deployment-v2.yaml 01-rolling-update/service.yaml
++ sed -i 's/replicas: 9/replicas: 3/g' 03-canary/deployment-stable.yaml
++ for f in 01-rolling-update/deployment-v1.yaml 01-rolling-update/service.yaml
++ k apply -f 01-rolling-update/deployment-v1.yaml
++ kubectl -n rebuild apply -f 01-rolling-update/deployment-v1.yaml
+deployment.apps/app-rolling created
++ for f in 01-rolling-update/deployment-v1.yaml 01-rolling-update/service.yaml
++ k apply -f 01-rolling-update/service.yaml
++ kubectl -n rebuild apply -f 01-rolling-update/service.yaml
+service/app-rolling-service created
++ k rollout status deploy/app-rolling --timeout=120s
++ kubectl -n rebuild rollout status deploy/app-rolling --timeout=120s
+Waiting for deployment "app-rolling" rollout to finish: 0 of 2 updated replicas are available...
+Waiting for deployment "app-rolling" rollout to finish: 1 of 2 updated replicas are available...
+deployment "app-rolling" successfully rolled out
++ k get pods -o wide
++ kubectl -n rebuild get pods -o wide
+NAME                           READY   STATUS    RESTARTS   AGE   IP              NODE           NOMINATED NODE   READINESS GATES
+app-rolling-86d7d44d5b-8tpdj   1/1     Running   0          14s   192.168.0.110   controlplane   <none>           <none>
+app-rolling-86d7d44d5b-q7k5m   1/1     Running   0          14s   192.168.0.125   controlplane   <none>           <none>
++ k apply -f 01-rolling-update/deployment-v2.yaml
++ kubectl -n rebuild apply -f 01-rolling-update/deployment-v2.yaml
+deployment.apps/app-rolling configured
++ k rollout status deploy/app-rolling --timeout=120s
++ kubectl -n rebuild rollout status deploy/app-rolling --timeout=120s
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "app-rolling" rollout to finish: 1 old replicas are pending termination...
+deployment "app-rolling" successfully rolled out
++ k get rs,pods
++ kubectl -n rebuild get rs,pods
+NAME                                     DESIRED   CURRENT   READY   AGE
+replicaset.apps/app-rolling-56bff6d88c   2         2         2       23s
+replicaset.apps/app-rolling-86d7d44d5b   0         0         0       37s
+
+NAME                               READY   STATUS        RESTARTS   AGE
+pod/app-rolling-56bff6d88c-hg77q   1/1     Running       0          8s
+pod/app-rolling-56bff6d88c-xgnr4   1/1     Running       0          23s
+pod/app-rolling-86d7d44d5b-q7k5m   1/1     Terminating   0          37s
++ k delete -f 01-rolling-update/deployment-v2.yaml -f 01-rolling-update/service.yaml
++ kubectl -n rebuild delete -f 01-rolling-update/deployment-v2.yaml -f 01-rolling-update/service.yaml
+deployment.apps "app-rolling" deleted from rebuild namespace
+service "app-rolling-service" deleted from rebuild namespace
++ for f in *blue*/*.yaml
++ k apply -f 02-blue-green/deployment-blue.yaml
++ kubectl -n rebuild apply -f 02-blue-green/deployment-blue.yaml
+deployment.apps/app-blue created
++ for f in *blue*/*.yaml
++ k apply -f 02-blue-green/deployment-green.yaml
++ kubectl -n rebuild apply -f 02-blue-green/deployment-green.yaml
+deployment.apps/app-green created
++ for f in *blue*/*.yaml
++ k apply -f 02-blue-green/service-blue.yaml
++ kubectl -n rebuild apply -f 02-blue-green/service-blue.yaml
+service/myapp-service created
++ for f in *blue*/*.yaml
++ k apply -f 02-blue-green/service-green.yaml
++ kubectl -n rebuild apply -f 02-blue-green/service-green.yaml
+service/myapp-service configured
++ k get deploy,svc
++ kubectl -n rebuild get deploy,svc
+NAME                        READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/app-blue    0/3     3            0           6s
+deployment.apps/app-green   0/3     3            0           5s
+
+NAME                    TYPE       CLUSTER-IP   EXTERNAL-IP   PORT(S)        AGE
+service/myapp-service   NodePort   10.96.60.9   <none>        80:30020/TCP   3s
++ sleep 15
++ k get pods -o wide
++ kubectl -n rebuild get pods -o wide
+NAME                        READY   STATUS    RESTARTS   AGE   IP              NODE           NOMINATED NODE   READINESS GATES
+app-blue-5c69d7785c-6lmp7   1/1     Running   0          20s   192.168.0.224   controlplane   <none>           <none>
+app-blue-5c69d7785c-l7w7b   1/1     Running   0          20s   192.168.0.99    controlplane   <none>           <none>
+app-blue-5c69d7785c-ssgbn   1/1     Running   0          20s   192.168.0.253   controlplane   <none>           <none>
+app-green-84df7f978-8h7c2   1/1     Running   0          20s   192.168.0.248   controlplane   <none>           <none>
+app-green-84df7f978-kg92d   1/1     Running   0          20s   192.168.0.193   controlplane   <none>           <none>
+app-green-84df7f978-lqw2s   1/1     Running   0          20s   192.168.0.203   controlplane   <none>           <none>
+++ k get svc -o name
+++ kubectl -n rebuild get svc -o name
+++ head -1
++ blue=service/myapp-service
++ k patch service/myapp-service -p '{"spec":{"selector":{"version":"green"}}}'
++ kubectl -n rebuild patch service/myapp-service -p '{"spec":{"selector":{"version":"green"}}}'
+service/myapp-service patched
++ k get service/myapp-service -o yaml
++ kubectl -n rebuild get service/myapp-service -o yaml
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"myapp"},"name":"myapp-service","namespace":"rebuild"},"spec":{"ports":[{"name":"http","nodePort":30020,"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"myapp","slot":"green"},"type":"NodePort"}}
+  creationTimestamp: "2026-10-09T11:42:24Z"
+  labels:
+    app: myapp
+  name: myapp-service
+  namespace: rebuild
+  resourceVersion: "80758"
+  uid: 70a440eb-430c-4460-adf0-3a0937f1ea8d
+spec:
+  clusterIP: 10.96.60.9
+  clusterIPs:
+  - 10.96.60.9
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http
+    nodePort: 30020
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: myapp
+    slot: green
+    version: green
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created
++ k apply -f 03-canary
++ kubectl -n rebuild apply -f 03-canary
+deployment.apps/app-canary created
+deployment.apps/app-stable created
+service/myapp-canary-service created
++ k rollout status deploy/app-stable --timeout=120s
++ kubectl -n rebuild rollout status deploy/app-stable --timeout=120s
+Waiting for deployment "app-stable" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-stable" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-stable" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-stable" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-stable" successfully rolled out
++ k get pods,svc
++ kubectl -n rebuild get pods,svc
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/app-canary-5849994497-jtmq5   1/1     Running   0          8s
+pod/app-stable-6ffb777f9d-dtqrp   1/1     Running   0          8s
+pod/app-stable-6ffb777f9d-rxw72   1/1     Running   0          8s
+pod/app-stable-6ffb777f9d-wwcvx   1/1     Running   0          8s
+
+NAME                           TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/myapp-canary-service   NodePort   10.110.60.215   <none>        80:30030/TCP   8s
++ sleep 15
++ k get endpointslices
++ kubectl -n rebuild get endpointslices
+NAME                         ADDRESSTYPE   PORTS   ENDPOINTS                                              AGE
+myapp-canary-service-p8wjx   IPv4          80      192.168.0.207,192.168.0.173,192.168.0.14 + 1 more...   23s
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created
++ k apply -f 04-recreate/deployment-v1.yaml
++ kubectl -n rebuild apply -f 04-recreate/deployment-v1.yaml
+deployment.apps/app-recreate created
++ k rollout status deploy/app-recreate --timeout=120s
++ kubectl -n rebuild rollout status deploy/app-recreate --timeout=120s
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-recreate" successfully rolled out
++ k apply -f 04-recreate/deployment-v2.yaml
++ kubectl -n rebuild apply -f 04-recreate/deployment-v2.yaml
+deployment.apps/app-recreate configured
++ k get pods
++ kubectl -n rebuild get pods
+NAME                            READY   STATUS        RESTARTS   AGE
+app-recreate-6c78cb55bb-d7959   1/1     Terminating   0          2s
+app-recreate-6c78cb55bb-hs8xx   1/1     Terminating   0          2s
+app-recreate-6c78cb55bb-rb2j4   1/1     Terminating   0          2s
++ k rollout status deploy/app-recreate --timeout=120s
++ kubectl -n rebuild rollout status deploy/app-recreate --timeout=120s
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 out of 3 new replicas have been updated...
+Waiting for deployment "app-recreate" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "app-recreate" rollout to finish: 2 of 3 updated replicas are available...
+deployment "app-recreate" successfully rolled out
++ k get rs,pods
++ kubectl -n rebuild get rs,pods
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/app-recreate-6c78cb55bb   0         0         0       6s
+replicaset.apps/app-recreate-7bd8d89b8b   3         3         3       2s
+
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/app-recreate-7bd8d89b8b-hb7s2   1/1     Running   0          2s
+pod/app-recreate-7bd8d89b8b-jvfwb   1/1     Running   0          2s
+pod/app-recreate-7bd8d89b8b-wgsr7   1/1     Running   0          2s
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/01-running.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/01-running.yaml
+pod/lifecycle-running created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/02-pending.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/02-pending.yaml
+pod/lifecycle-pending created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/03-succeeded.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/03-succeeded.yaml
+pod/lifecycle-succeeded created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/04-failed.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/04-failed.yaml
+pod/lifecycle-failed created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/05-crashloopbackoff.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/05-crashloopbackoff.yaml
+pod/lifecycle-crashloop created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/06-imagepullbackoff.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/06-imagepullbackoff.yaml
+pod/lifecycle-image-error created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/07-readiness.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/07-readiness.yaml
+pod/lifecycle-readiness created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/08-liveness.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/08-liveness.yaml
+pod/lifecycle-liveness created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/09-startup.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/09-startup.yaml
+pod/lifecycle-startup created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/10-init-container.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/10-init-container.yaml
+pod/lifecycle-init created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/11-multi-container.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/11-multi-container.yaml
+pod/lifecycle-multi-container created
++ for f in pod-lifecycle/*.yaml
++ k apply -f pod-lifecycle/12-termination.yaml
++ kubectl -n rebuild apply -f pod-lifecycle/12-termination.yaml
+pod/lifecycle-termination created
++ sleep 25
++ k get pods -o wide
++ kubectl -n rebuild get pods -o wide
+NAME                        READY   STATUS             RESTARTS      AGE   IP              NODE           NOMINATED NODE   READINESS GATES
+lifecycle-crashloop         0/1     Error              1 (14s ago)   30s   192.168.0.110   controlplane   <none>           <none>
+lifecycle-failed            0/1     Error              0             30s   192.168.0.33    controlplane   <none>           <none>
+lifecycle-image-error       0/1     ImagePullBackOff   0             29s   192.168.0.128   controlplane   <none>           <none>
+lifecycle-init              1/1     Running            0             27s   192.168.0.41    controlplane   <none>           <none>
+lifecycle-liveness          1/1     Running            0             28s   192.168.0.161   controlplane   <none>           <none>
+lifecycle-multi-container   2/2     Running            0             26s   192.168.0.130   controlplane   <none>           <none>
+lifecycle-pending           0/1     Pending            0             31s   <none>          <none>         <none>           <none>
+lifecycle-readiness         1/1     Running            0             29s   192.168.0.236   controlplane   <none>           <none>
+lifecycle-running           1/1     Running            0             31s   192.168.0.85    controlplane   <none>           <none>
+lifecycle-startup           0/1     Running            0             28s   192.168.0.25    controlplane   <none>           <none>
+lifecycle-succeeded         0/1     Completed          0             31s   192.168.0.195   controlplane   <none>           <none>
+lifecycle-termination       1/1     Running            0             25s   192.168.0.32    controlplane   <none>           <none>
+++ k get pods -o name
+++ kubectl -n rebuild get pods -o name
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-crashloop
++ kubectl -n rebuild describe pod/lifecycle-crashloop
+Name:             lifecycle-crashloop
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:47 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.110
+IPs:
+  IP:  192.168.0.110
+Containers:
+  crashing-app:
+    Container ID:  containerd://c67f1163d065e6e10045f42710894cfbdacb8efc6042c623ccfd313a680115fe
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'Application started'; sleep 3; echo 'Application crashed'; exit 1
+    State:          Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Fri, 09 Oct 2026 11:44:04 +0000
+      Finished:     Fri, 09 Oct 2026 11:44:07 +0000
+    Last State:     Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Fri, 09 Oct 2026 11:44:00 +0000
+      Finished:     Fri, 09 Oct 2026 11:44:03 +0000
+    Ready:          False
+    Restart Count:  1
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-kmt5n (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-kmt5n:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  31s                default-scheduler  Successfully assigned rebuild/lifecycle-crashloop to controlplane
+  Normal   Pulling    25s                kubelet            spec.containers{crashing-app}: Pulling image "busybox:1.36"
+  Normal   Pulled     18s                kubelet            spec.containers{crashing-app}: Successfully pulled image "busybox:1.36" in 535ms (6.577s including waiting). Image size: 2217006 bytes.
+  Normal   Created    14s (x2 over 18s)  kubelet            spec.containers{crashing-app}: Container created
+  Normal   Started    14s (x2 over 18s)  kubelet            spec.containers{crashing-app}: Container started
+  Normal   Pulled     14s                kubelet            spec.containers{crashing-app}: Container image "busybox:1.36" already present on machine and can be accessed by the pod
+  Warning  BackOff    10s                kubelet            spec.containers{crashing-app}: Back-off restarting failed container crashing-app in pod lifecycle-crashloop_rebuild(f62c7cb0-88de-4693-84ad-c02d827ec84e)
++ k logs pod/lifecycle-crashloop --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-crashloop --all-containers --tail=8
+Application started
+Application crashed
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-failed
++ kubectl -n rebuild describe pod/lifecycle-failed
+Name:             lifecycle-failed
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:47 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Failed
+IP:               192.168.0.33
+IPs:
+  IP:  192.168.0.33
+Containers:
+  task:
+    Container ID:  containerd://2b58d75efbbb992855c7aca84b99147842643ddc58203dca4f040b5580082245
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'Task started'; sleep 5; echo 'Task failed'; exit 1
+    State:          Terminated
+      Reason:       Error
+      Exit Code:    1
+      Started:      Fri, 09 Oct 2026 11:44:00 +0000
+      Finished:     Fri, 09 Oct 2026 11:44:05 +0000
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-6jl6c (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-6jl6c:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  31s   default-scheduler  Successfully assigned rebuild/lifecycle-failed to controlplane
+  Normal  Pulling    25s   kubelet            spec.containers{task}: Pulling image "busybox:1.36"
+  Normal  Pulled     18s   kubelet            spec.containers{task}: Successfully pulled image "busybox:1.36" in 482ms (6.829s including waiting). Image size: 2217006 bytes.
+  Normal  Created    18s   kubelet            spec.containers{task}: Container created
+  Normal  Started    18s   kubelet            spec.containers{task}: Container started
++ k logs pod/lifecycle-failed --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-failed --all-containers --tail=8
+Task started
+Task failed
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-image-error
++ kubectl -n rebuild describe pod/lifecycle-image-error
+Name:             lifecycle-image-error
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:48 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               192.168.0.128
+IPs:
+  IP:  192.168.0.128
+Containers:
+  broken-image:
+    Container ID:   
+    Image:          jakwehrgkaejw:kahsdfgkhj
+    Image ID:       
+    Port:           <none>
+    Host Port:      <none>
+    State:          Waiting
+      Reason:       ImagePullBackOff
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-tpn9m (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-tpn9m:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  30s               default-scheduler  Successfully assigned rebuild/lifecycle-image-error to controlplane
+  Normal   BackOff    16s               kubelet            spec.containers{broken-image}: Back-off pulling image "jakwehrgkaejw:kahsdfgkhj"
+  Warning  Failed     16s               kubelet            spec.containers{broken-image}: Error: ImagePullBackOff
+  Normal   Pulling    2s (x2 over 24s)  kubelet            spec.containers{broken-image}: Pulling image "jakwehrgkaejw:kahsdfgkhj"
+  Warning  Failed     1s (x2 over 17s)  kubelet            spec.containers{broken-image}: Failed to pull image "jakwehrgkaejw:kahsdfgkhj": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/jakwehrgkaejw:kahsdfgkhj": failed to resolve image: docker.io/library/jakwehrgkaejw:kahsdfgkhj: not found
+  Warning  Failed     1s (x2 over 17s)  kubelet            spec.containers{broken-image}: Error: ErrImagePull
++ k logs pod/lifecycle-image-error --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-image-error --all-containers --tail=8
+Error from server (BadRequest): container "broken-image" in pod "lifecycle-image-error" is waiting to start: trying and failing to pull image
++ true
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-init
++ kubectl -n rebuild describe pod/lifecycle-init
+Name:             lifecycle-init
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:50 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.41
+IPs:
+  IP:  192.168.0.41
+Init Containers:
+  setup:
+    Container ID:  containerd://3ab61b37e8535edad82d4274a639e3ceaf3eba8b7e330943e43b7d0d860d196b
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'Init container running'; sleep 10; echo 'Init complete'
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Fri, 09 Oct 2026 11:44:04 +0000
+      Finished:     Fri, 09 Oct 2026 11:44:14 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-wt7b5 (ro)
+Containers:
+  app:
+    Container ID:   containerd://28d21c775db56e6748ba63a840a329168e874a9ec163e1404410176d921a3637
+    Image:          nginx:1.27
+    Image ID:       docker.io/library/nginx@sha256:6784fb0834aa7dbbe12e3d7471e69c290df3e6ba810dc38b34ae33d3c1c05f7d
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:15 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-wt7b5 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-wt7b5:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  28s   default-scheduler  Successfully assigned rebuild/lifecycle-init to controlplane
+  Normal  Pulling    23s   kubelet            spec.initContainers{setup}: Pulling image "busybox:1.36"
+  Normal  Pulled     14s   kubelet            spec.initContainers{setup}: Successfully pulled image "busybox:1.36" in 590ms (9.128s including waiting). Image size: 2217006 bytes.
+  Normal  Created    14s   kubelet            spec.initContainers{setup}: Container created
+  Normal  Started    14s   kubelet            spec.initContainers{setup}: Container started
+  Normal  Pulled     3s    kubelet            spec.containers{app}: Container image "nginx:1.27" already present on machine and can be accessed by the pod
+  Normal  Created    3s    kubelet            spec.containers{app}: Container created
+  Normal  Started    3s    kubelet            spec.containers{app}: Container started
++ k logs pod/lifecycle-init --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-init --all-containers --tail=8
+Init container running
+Init complete
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/09 11:44:15 [notice] 1#1: using the "epoll" event method
+2026/10/09 11:44:15 [notice] 1#1: nginx/1.27.5
+2026/10/09 11:44:15 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2026/10/09 11:44:15 [notice] 1#1: OS: Linux 6.8.0-146-generic
+2026/10/09 11:44:15 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/10/09 11:44:15 [notice] 1#1: start worker processes
+2026/10/09 11:44:15 [notice] 1#1: start worker process 29
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-liveness
++ kubectl -n rebuild describe pod/lifecycle-liveness
+Name:             lifecycle-liveness
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:49 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.161
+IPs:
+  IP:  192.168.0.161
+Containers:
+  app:
+    Container ID:  containerd://fea63914615efa509b4772cde848955e1af59d25775644b16585aed1b8f484c8
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'App started'; touch /tmp/healthy; sleep 20; rm /tmp/healthy; echo 'Health file removed'; sleep 300
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:02 +0000
+    Ready:          True
+    Restart Count:  0
+    Liveness:       exec [sh -c test -f /tmp/healthy] delay=5s timeout=1s period=5s successThreshold=1 failureThreshold=2
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-n98v6 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-n98v6:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  29s   default-scheduler  Successfully assigned rebuild/lifecycle-liveness to controlplane
+  Normal  Pulling    23s   kubelet            spec.containers{app}: Pulling image "busybox:1.36"
+  Normal  Pulled     16s   kubelet            spec.containers{app}: Successfully pulled image "busybox:1.36" in 531ms (7.709s including waiting). Image size: 2217006 bytes.
+  Normal  Created    16s   kubelet            spec.containers{app}: Container created
+  Normal  Started    16s   kubelet            spec.containers{app}: Container started
++ k logs pod/lifecycle-liveness --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-liveness --all-containers --tail=8
+App started
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-multi-container
++ kubectl -n rebuild describe pod/lifecycle-multi-container
+Name:             lifecycle-multi-container
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:51 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.130
+IPs:
+  IP:  192.168.0.130
+Containers:
+  app:
+    Container ID:   containerd://5639662d35179bf57ef2a99f4f138bbe71eabeb22f797c4bf122155ffa15c266
+    Image:          nginx:1.27
+    Image ID:       docker.io/library/nginx@sha256:6784fb0834aa7dbbe12e3d7471e69c290df3e6ba810dc38b34ae33d3c1c05f7d
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:04 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-mbzp4 (ro)
+  sidecar:
+    Container ID:  containerd://27238d60bf707aac30119cfc3c7a656fb4fbffdc48ea87aeacec83bbecb97daf
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      while true; do echo 'Sidecar is running'; sleep 10; done
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:05 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-mbzp4 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-mbzp4:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  27s   default-scheduler  Successfully assigned rebuild/lifecycle-multi-container to controlplane
+  Normal  Pulling    23s   kubelet            spec.containers{app}: Pulling image "nginx:1.27"
+  Normal  Pulled     14s   kubelet            spec.containers{app}: Successfully pulled image "nginx:1.27" in 486ms (9.604s including waiting). Image size: 72406859 bytes.
+  Normal  Created    14s   kubelet            spec.containers{app}: Container created
+  Normal  Started    14s   kubelet            spec.containers{app}: Container started
+  Normal  Pulled     14s   kubelet            spec.containers{sidecar}: Container image "busybox:1.36" already present on machine and can be accessed by the pod
+  Normal  Created    14s   kubelet            spec.containers{sidecar}: Container created
+  Normal  Started    13s   kubelet            spec.containers{sidecar}: Container started
++ k logs pod/lifecycle-multi-container --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-multi-container --all-containers --tail=8
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/09 11:44:05 [notice] 1#1: using the "epoll" event method
+2026/10/09 11:44:05 [notice] 1#1: nginx/1.27.5
+2026/10/09 11:44:05 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2026/10/09 11:44:05 [notice] 1#1: OS: Linux 6.8.0-146-generic
+2026/10/09 11:44:05 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/10/09 11:44:05 [notice] 1#1: start worker processes
+2026/10/09 11:44:05 [notice] 1#1: start worker process 29
+Sidecar is running
+Sidecar is running
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-pending
++ kubectl -n rebuild describe pod/lifecycle-pending
+Name:             lifecycle-pending
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             <none>
+Labels:           <none>
+Annotations:      <none>
+Status:           Pending
+IP:               
+IPs:              <none>
+Containers:
+  impossible-resource:
+    Image:      nginx:1.27
+    Port:       <none>
+    Host Port:  <none>
+    Requests:
+      cpu:        1
+      memory:     9Gi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-wmm2n (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False 
+Volumes:
+  kube-api-access-wmm2n:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason            Age                From               Message
+  ----     ------            ----               ----               -------
+  Warning  FailedScheduling  11s (x3 over 32s)  default-scheduler  0/1 nodes are available: 1 Insufficient cpu, 1 Insufficient memory. preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
++ k logs pod/lifecycle-pending --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-pending --all-containers --tail=8
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-readiness
++ kubectl -n rebuild describe pod/lifecycle-readiness
+Name:             lifecycle-readiness
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:48 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.236
+IPs:
+  IP:  192.168.0.236
+Containers:
+  nginx:
+    Container ID:   containerd://84462fa32655673825fc1d3dfcdad3b51798fa1020aea1a9fb3430c1615830e9
+    Image:          nginx:1.27
+    Image ID:       docker.io/library/nginx@sha256:6784fb0834aa7dbbe12e3d7471e69c290df3e6ba810dc38b34ae33d3c1c05f7d
+    Port:           <none>
+    Host Port:      <none>
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:02 +0000
+    Ready:          True
+    Restart Count:  0
+    Readiness:      http-get http://:80/ delay=5s timeout=1s period=5s successThreshold=1 failureThreshold=3
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-9pzph (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-9pzph:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  31s   default-scheduler  Successfully assigned rebuild/lifecycle-readiness to controlplane
+  Normal  Pulling    25s   kubelet            spec.containers{nginx}: Pulling image "nginx:1.27"
+  Normal  Pulled     17s   kubelet            spec.containers{nginx}: Successfully pulled image "nginx:1.27" in 540ms (7.601s including waiting). Image size: 72406859 bytes.
+  Normal  Created    17s   kubelet            spec.containers{nginx}: Container created
+  Normal  Started    17s   kubelet            spec.containers{nginx}: Container started
++ k logs pod/lifecycle-readiness --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-readiness --all-containers --tail=8
+2026/10/09 11:44:02 [notice] 1#1: nginx/1.27.5
+2026/10/09 11:44:02 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2026/10/09 11:44:02 [notice] 1#1: OS: Linux 6.8.0-146-generic
+2026/10/09 11:44:02 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/10/09 11:44:02 [notice] 1#1: start worker processes
+2026/10/09 11:44:02 [notice] 1#1: start worker process 29
+192.168.0.69 - - [09/Oct/2026:11:44:09 +0000] "GET / HTTP/1.1" 200 615 "-" "kube-probe/1.37" "-"
+192.168.0.69 - - [09/Oct/2026:11:44:14 +0000] "GET / HTTP/1.1" 200 615 "-" "kube-probe/1.37" "-"
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-running
++ kubectl -n rebuild describe pod/lifecycle-running
+Name:             lifecycle-running
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:46 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.85
+IPs:
+  IP:  192.168.0.85
+Containers:
+  nginx:
+    Container ID:   containerd://4d33a3276115477e17cdc96427e1b80c5da72ddf4099f35a98c60189c6550144
+    Image:          nginx:1.27
+    Image ID:       docker.io/library/nginx@sha256:6784fb0834aa7dbbe12e3d7471e69c290df3e6ba810dc38b34ae33d3c1c05f7d
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:43:57 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-t6nml (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-t6nml:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  33s   default-scheduler  Successfully assigned rebuild/lifecycle-running to controlplane
+  Normal  Pulling    32s   kubelet            spec.containers{nginx}: Pulling image "nginx:1.27"
+  Normal  Pulled     22s   kubelet            spec.containers{nginx}: Successfully pulled image "nginx:1.27" in 9.315s (9.315s including waiting). Image size: 72406859 bytes.
+  Normal  Created    22s   kubelet            spec.containers{nginx}: Container created
+  Normal  Started    22s   kubelet            spec.containers{nginx}: Container started
++ k logs pod/lifecycle-running --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-running --all-containers --tail=8
+/docker-entrypoint.sh: Configuration complete; ready for start up
+2026/10/09 11:43:57 [notice] 1#1: using the "epoll" event method
+2026/10/09 11:43:57 [notice] 1#1: nginx/1.27.5
+2026/10/09 11:43:57 [notice] 1#1: built by gcc 12.2.0 (Debian 12.2.0-14) 
+2026/10/09 11:43:57 [notice] 1#1: OS: Linux 6.8.0-146-generic
+2026/10/09 11:43:57 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1024:524288
+2026/10/09 11:43:57 [notice] 1#1: start worker processes
+2026/10/09 11:43:57 [notice] 1#1: start worker process 29
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-startup
++ kubectl -n rebuild describe pod/lifecycle-startup
+Name:             lifecycle-startup
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:49 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.25
+IPs:
+  IP:  192.168.0.25
+Containers:
+  slow-app:
+    Container ID:  containerd://d9664db6d1ff4c6c622ecad250d2e5c526e2b656c436193b44adb18589849dc5
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'Application starting...'; sleep 30; touch /tmp/started; echo 'Application started'; sleep 300
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:03 +0000
+    Ready:          False
+    Restart Count:  0
+    Startup:        exec [sh -c test -f /tmp/started] delay=0s timeout=1s period=5s successThreshold=1 failureThreshold=10
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-nmch5 (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-nmch5:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age               From               Message
+  ----     ------     ----              ----               -------
+  Normal   Scheduled  30s               default-scheduler  Successfully assigned rebuild/lifecycle-startup to controlplane
+  Normal   Pulling    24s               kubelet            spec.containers{slow-app}: Pulling image "busybox:1.36"
+  Normal   Pulled     16s               kubelet            spec.containers{slow-app}: Successfully pulled image "busybox:1.36" in 859ms (8.569s including waiting). Image size: 2217006 bytes.
+  Normal   Created    16s               kubelet            spec.containers{slow-app}: Container created
+  Normal   Started    16s               kubelet            spec.containers{slow-app}: Container started
+  Warning  Unhealthy  4s (x3 over 14s)  kubelet            spec.containers{slow-app}: Startup probe failed:
++ k logs pod/lifecycle-startup --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-startup --all-containers --tail=8
+Application starting...
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-succeeded
++ kubectl -n rebuild describe pod/lifecycle-succeeded
+Name:             lifecycle-succeeded
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:46 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Succeeded
+IP:               192.168.0.195
+IPs:
+  IP:  192.168.0.195
+Containers:
+  task:
+    Container ID:  containerd://040518bb9c59620132149b360f87df5dbf7dbfa03b42c1af79ee7722a6a608f7
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      echo 'Task started'; sleep 5; echo 'Task completed successfully'; exit 0
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Fri, 09 Oct 2026 11:43:59 +0000
+      Finished:     Fri, 09 Oct 2026 11:44:04 +0000
+    Ready:          False
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-r45bh (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   False 
+  Initialized                 True 
+  Ready                       False 
+  ContainersReady             False 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-r45bh:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  33s   default-scheduler  Successfully assigned rebuild/lifecycle-succeeded to controlplane
+  Normal  Pulling    28s   kubelet            spec.containers{task}: Pulling image "busybox:1.36"
+  Normal  Pulled     20s   kubelet            spec.containers{task}: Successfully pulled image "busybox:1.36" in 2.312s (7.898s including waiting). Image size: 2217006 bytes.
+  Normal  Created    20s   kubelet            spec.containers{task}: Container created
+  Normal  Started    20s   kubelet            spec.containers{task}: Container started
++ k logs pod/lifecycle-succeeded --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-succeeded --all-containers --tail=8
+Task started
+Task completed successfully
++ for p in $(k get pods -o name)
++ k describe pod/lifecycle-termination
++ kubectl -n rebuild describe pod/lifecycle-termination
+Name:             lifecycle-termination
+Namespace:        rebuild
+Priority:         0
+Service Account:  default
+Node:             controlplane/172.30.1.2
+Start Time:       Fri, 09 Oct 2026 11:43:52 +0000
+Labels:           <none>
+Annotations:      <none>
+Status:           Running
+IP:               192.168.0.32
+IPs:
+  IP:  192.168.0.32
+Containers:
+  graceful-app:
+    Container ID:  containerd://22a66518cd87a1e0028f60bd42d74e02c28ec0a4f4f7e28a41f41b8f0b016b64
+    Image:         busybox:1.36
+    Image ID:      docker.io/library/busybox@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      sh
+      -c
+      trap 'echo "SIGTERM received; cleaning up..."; sleep 10; echo "Cleanup complete"; exit 0' TERM
+      echo "Application running"
+      while true; do sleep 2; done
+      
+    State:          Running
+      Started:      Fri, 09 Oct 2026 11:44:05 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-g8xsx (ro)
+Conditions:
+  Type                        Status
+  PodReadyToStartContainers   True 
+  Initialized                 True 
+  Ready                       True 
+  ContainersReady             True 
+  PodScheduled                True 
+Volumes:
+  kube-api-access-g8xsx:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    Optional:                false
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  27s   default-scheduler  Successfully assigned rebuild/lifecycle-termination to controlplane
+  Normal  Pulling    24s   kubelet            spec.containers{graceful-app}: Pulling image "busybox:1.36"
+  Normal  Pulled     14s   kubelet            spec.containers{graceful-app}: Successfully pulled image "busybox:1.36" in 543ms (10.147s including waiting). Image size: 2217006 bytes.
+  Normal  Created    14s   kubelet            spec.containers{graceful-app}: Container created
+  Normal  Started    14s   kubelet            spec.containers{graceful-app}: Container started
++ k logs pod/lifecycle-termination --all-containers --tail=8
++ kubectl -n rebuild logs pod/lifecycle-termination --all-containers --tail=8
+Application running
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created

@@ -1,0 +1,96 @@
++ s12
++ cd /root/rebuild/Sessions/Session12
++ ns
++ kubectl create ns rebuild
++ true
++ k create configmap app-config '--from-literal=GREETING=Hello students'
++ kubectl -n rebuild create configmap app-config '--from-literal=GREETING=Hello students'
+configmap/app-config created
++ k create secret generic demo-secret --from-literal=TOKEN=dummy-demo-value-not-a-real-secret
++ kubectl -n rebuild create secret generic demo-secret --from-literal=TOKEN=dummy-demo-value-not-a-real-secret
+secret/demo-secret created
++ cat
++ k apply -f config-demo.yaml
++ kubectl -n rebuild apply -f config-demo.yaml
+pod/config-demo created
++ k wait --for=condition=Ready pod/config-demo --timeout=120s
++ kubectl -n rebuild wait --for=condition=Ready pod/config-demo --timeout=120s
+pod/config-demo condition met
++ k logs config-demo
++ kubectl -n rebuild logs config-demo
+Hello students
+Dummy secret injected
++ k exec config-demo -- printenv GREETING
++ kubectl -n rebuild exec config-demo -- printenv GREETING
+Hello students
++ k create deploy ingress-app --image=nginx:1.27-alpine
++ kubectl -n rebuild create deploy ingress-app --image=nginx:1.27-alpine
+deployment.apps/ingress-app created
++ k expose deploy ingress-app --port=80
++ kubectl -n rebuild expose deploy ingress-app --port=80
+service/ingress-app exposed
++ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.13.2/deploy/static/provider/baremetal/deploy.yaml
+namespace/ingress-nginx created
+serviceaccount/ingress-nginx created
+serviceaccount/ingress-nginx-admission created
+role.rbac.authorization.k8s.io/ingress-nginx created
+role.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx created
+clusterrole.rbac.authorization.k8s.io/ingress-nginx-admission created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx created
+rolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx created
+clusterrolebinding.rbac.authorization.k8s.io/ingress-nginx-admission created
+configmap/ingress-nginx-controller created
+service/ingress-nginx-controller created
+service/ingress-nginx-controller-admission created
+deployment.apps/ingress-nginx-controller created
+job.batch/ingress-nginx-admission-create created
+job.batch/ingress-nginx-admission-patch created
+ingressclass.networking.k8s.io/nginx created
+validatingwebhookconfiguration.admissionregistration.k8s.io/ingress-nginx-admission created
++ kubectl wait --namespace ingress-nginx --for=condition=Ready pod --selector=app.kubernetes.io/component=controller --timeout=180s
+pod/ingress-nginx-controller-66458d9764-nmsj4 condition met
++ cat
++ k apply -f ingress.yaml
++ kubectl -n rebuild apply -f ingress.yaml
+Error from server (InternalError): error when creating "ingress.yaml": Internal error occurred: failed calling webhook "validate.nginx.ingress.kubernetes.io": failed to call webhook: Post "https://ingress-nginx-controller-admission.ingress-nginx.svc:443/networking/v1/ingresses?timeout=10s": dial tcp 10.103.164.50:443: connect: no route to host
++ k rollout status deploy/ingress-app --timeout=120s
++ kubectl -n rebuild rollout status deploy/ingress-app --timeout=120s
+deployment "ingress-app" successfully rolled out
+++ kubectl -n ingress-nginx get svc ingress-nginx-controller -o 'jsonpath={.spec.ports[?(@.port==80)].nodePort}'
++ np=31877
++ head -8
+++ kubectl get nodes -o 'jsonpath={.items[0].status.addresses[?(@.type=="InternalIP")].address}'
++ curl -f -H 'Host: demo.local' http://172.30.1.2:31877
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (7) Failed to connect to 172.30.1.2 port 31877 after 0 ms: Couldn't connect to server
++ k patch svc ingress-app -p '{"spec":{"selector":{"app":"wrong"}}}'
++ kubectl -n rebuild patch svc ingress-app -p '{"spec":{"selector":{"app":"wrong"}}}'
+service/ingress-app patched
++ k get endpointslice
++ kubectl -n rebuild get endpointslice
+NAME                ADDRESSTYPE   PORTS     ENDPOINTS   AGE
+ingress-app-7d6ll   IPv4          <unset>   <unset>     26s
++ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: demo.local' http://localhost:31877
+000
++ k patch svc ingress-app -p '{"spec":{"selector":{"app":"ingress-app"}}}'
++ kubectl -n rebuild patch svc ingress-app -p '{"spec":{"selector":{"app":"ingress-app"}}}'
+service/ingress-app patched
++ sleep 3
++ k get endpointslice
++ kubectl -n rebuild get endpointslice
+NAME                ADDRESSTYPE   PORTS   ENDPOINTS       AGE
+ingress-app-7d6ll   IPv4          80      192.168.0.158   29s
++ curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: demo.local' http://localhost:31877
+404
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created
++ kubectl delete ns ingress-nginx --timeout=90s
+namespace "ingress-nginx" deleted

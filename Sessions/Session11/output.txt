@@ -1,0 +1,105 @@
++ s11
++ cd /root/rebuild/Sessions/Session11
++ ns
++ kubectl create ns rebuild
++ true
++ k create deploy web --image=nginx:1.27-alpine
++ kubectl -n rebuild create deploy web --image=nginx:1.27-alpine
+deployment.apps/web created
++ k rollout status deploy/web --timeout=120s
++ kubectl -n rebuild rollout status deploy/web --timeout=120s
+Waiting for deployment "web" rollout to finish: 0 of 1 updated replicas are available...
+deployment "web" successfully rolled out
++ for type in ClusterIP NodePort LoadBalancer
++ k expose deploy web --name=web-clusterip --port=80 --type=ClusterIP
++ kubectl -n rebuild expose deploy web --name=web-clusterip --port=80 --type=ClusterIP
+service/web-clusterip exposed
++ for type in ClusterIP NodePort LoadBalancer
++ k expose deploy web --name=web-nodeport --port=80 --type=NodePort
++ kubectl -n rebuild expose deploy web --name=web-nodeport --port=80 --type=NodePort
+service/web-nodeport exposed
++ for type in ClusterIP NodePort LoadBalancer
++ k expose deploy web --name=web-loadbalancer --port=80 --type=LoadBalancer
++ kubectl -n rebuild expose deploy web --name=web-loadbalancer --port=80 --type=LoadBalancer
+service/web-loadbalancer exposed
++ k create service externalname external --external-name=example.com
++ kubectl -n rebuild create service externalname external --external-name=example.com
+service/external created
++ k expose deploy web --name=headless --port=80 --cluster-ip=None
++ kubectl -n rebuild expose deploy web --name=headless --port=80 --cluster-ip=None
+service/headless exposed
++ k get svc -o wide
++ kubectl -n rebuild get svc -o wide
+NAME               TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE   SELECTOR
+external           ExternalName   <none>           example.com   <none>         0s    app=external
+headless           ClusterIP      None             <none>        80/TCP         0s    app=web
+web-clusterip      ClusterIP      10.98.228.27     <none>        80/TCP         0s    app=web
+web-loadbalancer   LoadBalancer   10.106.203.182   <pending>     80:32536/TCP   0s    app=web
+web-nodeport       NodePort       10.98.51.96      <none>        80:30654/TCP   0s    app=web
++ k get endpointslices
++ kubectl -n rebuild get endpointslices
+NAME                     ADDRESSTYPE   PORTS   ENDPOINTS       AGE
+headless-ckjzx           IPv4          80      192.168.0.154   0s
+web-clusterip-6ntqp      IPv4          80      192.168.0.154   0s
+web-loadbalancer-t72xr   IPv4          80      192.168.0.154   0s
+web-nodeport-45cjz       IPv4          80      192.168.0.154   0s
++ k run client --image=busybox:1.36 --restart=Never --command -- sleep 300
++ kubectl -n rebuild run client --image=busybox:1.36 --restart=Never --command -- sleep 300
+pod/client created
++ k wait --for=condition=Ready pod/client --timeout=120s
++ kubectl -n rebuild wait --for=condition=Ready pod/client --timeout=120s
+pod/client condition met
++ k exec client -- wget -qO- http://web-clusterip
++ kubectl -n rebuild exec client -- wget -qO- http://web-clusterip
++ head -8
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
++ k exec client -- nslookup web-clusterip.rebuild.svc.cluster.local
++ kubectl -n rebuild exec client -- nslookup web-clusterip.rebuild.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	web-clusterip.rebuild.svc.cluster.local
+Address: 10.98.228.27
+
+
++ k exec client -- nslookup headless.rebuild.svc.cluster.local
++ kubectl -n rebuild exec client -- nslookup headless.rebuild.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+Name:	headless.rebuild.svc.cluster.local
+Address: 192.168.0.154
+
+
++ k exec client -- nslookup external.rebuild.svc.cluster.local
++ kubectl -n rebuild exec client -- nslookup external.rebuild.svc.cluster.local
+Server:		10.96.0.10
+Address:	10.96.0.10:53
+
+external.rebuild.svc.cluster.local	canonical name = example.com
+Name:	example.com
+Address: 2606:4700:10::6814:179a
+Name:	example.com
+Address: 2606:4700:10::ac42:93f3
+
+external.rebuild.svc.cluster.local	canonical name = example.com
+Name:	example.com
+Address: 172.66.147.243
+Name:	example.com
+Address: 104.20.23.154
+
++ k get services -o yaml
++ kubectl -n rebuild get services -o yaml
++ clean
++ kubectl delete ns rebuild --wait=true --timeout=90s
+namespace "rebuild" deleted
++ ns
++ kubectl create ns rebuild
+namespace/rebuild created

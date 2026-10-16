@@ -1,0 +1,6 @@
+pod/pending-demo condition met
+NAME           READY   STATUS    RESTARTS   AGE   IP             NODE           NOMINATED NODE   READINESS GATES
+pending-demo   1/1     Running   0          54s   192.168.0.91   controlplane   <none>           <none>
+NAME           CPU(cores)   MEMORY(bytes)   
+pending-demo   0m           2Mi             
+namespace "fixes-verify" deleted

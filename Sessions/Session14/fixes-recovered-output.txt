@@ -1,0 +1,31 @@
++ kubectl create ns fixes-verify
+namespace/fixes-verify created
++ for d in 07-imagepullbackoff 08-pending-pods
++ kubectl -n fixes-verify apply -f /root/course/session-14-kubernetes-troubleshooting/07-imagepullbackoff/fixed-pod.yaml
+pod/image-demo created
++ kubectl -n fixes-verify wait --for=condition=Ready pod --all --timeout=120s
+pod/image-demo condition met
++ kubectl -n fixes-verify get pods -o wide
+NAME         READY   STATUS    RESTARTS   AGE   IP             NODE           NOMINATED NODE   READINESS GATES
+image-demo   1/1     Running   0          2s    192.168.0.99   controlplane   <none>           <none>
++ sleep 35
++ kubectl -n fixes-verify top pods
+NAME         CPU(cores)   MEMORY(bytes)   
+image-demo   4m           6Mi             
++ kubectl -n fixes-verify delete -f /root/course/session-14-kubernetes-troubleshooting/07-imagepullbackoff/fixed-pod.yaml --wait=false
+pod "image-demo" deleted from fixes-verify namespace
++ for d in 07-imagepullbackoff 08-pending-pods
++ kubectl -n fixes-verify apply -f /root/course/session-14-kubernetes-troubleshooting/08-pending-pods/fixed-pod.yaml
+pod/pending-demo created
++ kubectl -n fixes-verify wait --for=condition=Ready pod --all --timeout=120s
+timed out waiting for the condition on pods/image-demo
+timed out waiting for the condition on pods/pending-demo
++ kubectl -n fixes-verify get pods -o wide
+No resources found in fixes-verify namespace.
++ sleep 35
++ kubectl -n fixes-verify top pods
+No resources found in fixes-verify namespace.
++ kubectl -n fixes-verify delete -f /root/course/session-14-kubernetes-troubleshooting/08-pending-pods/fixed-pod.yaml --wait=false
+Error from server (NotFound): error when deleting "/root/course/session-14-kubernetes-troubleshooting/08-pending-pods/fixed-pod.yaml": pods "pending-demo" not found
++ kubectl delete ns fixes-verify --wait=false
+Error from server (NotFound): namespaces "fixes-verify" not found
