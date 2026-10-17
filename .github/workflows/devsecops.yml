@@ -121,13 +121,12 @@ jobs:
           path: /tmp
       - name: Load image
         run: docker load --input /tmp/session17-app.tar
+      - name: Install Trivy CLI
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          trivy version
       - name: Trivy scan - gate on HIGH and CRITICAL
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
-          severity: HIGH,CRITICAL
-          exit-code: "1"
-          format: table
+        run: trivy image --severity HIGH,CRITICAL --exit-code 1 --format table ${{ env.IMAGE }}:${{ github.sha }}
 
   push-image:
     name: Push Image to GHCR
