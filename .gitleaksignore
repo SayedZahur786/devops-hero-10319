@@ -1,0 +1,13 @@
+# Known false positives: Session 12 course-material demo secrets (base64 k8s Secret
+# manifests and instructor notes from the course repo). Not live credentials.
+0c9a224eb0a9416716f090a9e62384a563fa5d8c:session-12-ingress-configmaps-secrets/instructor-notes.md 09-40-19-923.md:generic-api-key:231
+0c9a224eb0a9416716f090a9e62384a563fa5d8c:session-12-ingress-configmaps-secrets/instructor-notes.md 10-38-18-235.md:generic-api-key:231
+0c9a224eb0a9416716f090a9e62384a563fa5d8c:session-12-ingress-configmaps-secrets/instructor-notes.md 16-26-12-145.md:generic-api-key:232
+1294f56812c01ff6e9dc0ee0a2df9253ab350d52:session-12-ingress-configmaps-secrets/secret/db-secret.yaml:generic-api-key:12
+1294f56812c01ff6e9dc0ee0a2df9253ab350d52:session-12-ingress-configmaps-secrets/secret/db-secret.yaml:kubernetes-secret-yaml:2
+1a24fe08c4956db0f8f22ffd6655581f7185699e:session-12-ingress-configmaps-secrets/lab.md:generic-api-key:181
+d80d3a4960eea12d08b51964f05c53f9065e1911:session-12-ingress-configmaps-secrets/02-secret/README.md:generic-api-key:64
+d80d3a4960eea12d08b51964f05c53f9065e1911:session-12-ingress-configmaps-secrets/02-secret/db-secret.yaml:generic-api-key:12
+d80d3a4960eea12d08b51964f05c53f9065e1911:session-12-ingress-configmaps-secrets/02-secret/db-secret.yaml:kubernetes-secret-yaml:2
+d80d3a4960eea12d08b51964f05c53f9065e1911:session-12-ingress-configmaps-secrets/04-full-demo/secret.yaml:generic-api-key:13
+d80d3a4960eea12d08b51964f05c53f9065e1911:session-12-ingress-configmaps-secrets/04-full-demo/secret.yaml:kubernetes-secret-yaml:2
