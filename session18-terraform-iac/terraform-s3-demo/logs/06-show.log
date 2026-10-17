@@ -1,0 +1,42 @@
+# aws_s3_bucket.demo:
+resource "aws_s3_bucket" "demo" {
+    acceleration_status         = [90mnull[0m[0m
+    arn                         = "arn:aws:s3:::devops-s18-demo-10319"
+    bucket                      = "devops-s18-demo-10319"
+    bucket_domain_name          = "devops-s18-demo-10319.s3.amazonaws.com"
+    bucket_prefix               = [90mnull[0m[0m
+    bucket_regional_domain_name = "devops-s18-demo-10319.s3.us-east-1.amazonaws.com"
+    force_destroy               = false
+    hosted_zone_id              = "Z3AQBSTGFYJSTF"
+    id                          = "devops-s18-demo-10319"
+    object_lock_enabled         = false
+    policy                      = [90mnull[0m[0m
+    region                      = "us-east-1"
+    request_payer               = [90mnull[0m[0m
+    tags                        = {
+        "Environment" = "dev"
+        "ManagedBy"   = "terraform"
+        "Name"        = "devops-session18-demo"
+    }
+    tags_all                    = {
+        "Environment" = "dev"
+        "ManagedBy"   = "terraform"
+        "Name"        = "devops-session18-demo"
+    }
+
+    grant {
+        id          = "75aa57f09aa0c8caeab4f8c24e99d10f8e7faeebf76c078efc7c6caea54ba06a"
+        permissions = [
+            "FULL_CONTROL",
+        ]
+        type        = "CanonicalUser"
+        uri         = [90mnull[0m[0m
+    }
+
+    versioning {
+        enabled    = false
+        mfa_delete = false
+    }
+}
+
+# aws_s3_bucket_public_access_block.demo:

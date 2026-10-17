@@ -1,10 +1,26 @@
-resource "aws_s3_bucket" "devops553" {
-  bucket        = var.bucket_name
-  force_destroy = true
+resource "aws_s3_bucket" "demo" {
+  bucket = var.bucket_name
+
   tags = {
-    Name        = var.bucket_name
-    Environment = "dev"
-    ManagedBy   = "Terraform"
-    Project     = "Session18"
+    Name        = "devops-session18-demo"
+    Environment = var.environment
+    ManagedBy   = "terraform"
   }
+}
+
+resource "aws_s3_bucket_versioning" "demo" {
+  bucket = aws_s3_bucket.demo.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "demo" {
+  bucket = aws_s3_bucket.demo.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }

@@ -1,15 +1,14 @@
 output "bucket_name" {
-  type        = string
-  description = "Name of the S3 bucket."
-  value       = aws_s3_bucket.devops553.bucket
+  description = "Name of the created bucket"
+  value       = aws_s3_bucket.demo.bucket
 }
+
 output "bucket_arn" {
-  type        = string
-  description = "ARN of the S3 bucket."
-  value       = aws_s3_bucket.devops553.arn
+  description = "ARN of the created bucket"
+  value       = aws_s3_bucket.demo.arn
 }
-output "bucket_region" {
-  type        = string
-  description = "AWS region of the S3 bucket."
-  value       = aws_s3_bucket.devops553.region
+
+output "versioning_status" {
+  description = "Versioning state of the bucket"
+  value       = aws_s3_bucket_versioning.demo.versioning_configuration[0].status
 }

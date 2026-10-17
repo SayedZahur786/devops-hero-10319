@@ -1,0 +1,3 @@
+bucket_arn = "arn:aws:s3:::devops-s18-demo-10319"
+bucket_name = "devops-s18-demo-10319"
+versioning_status = "Enabled"

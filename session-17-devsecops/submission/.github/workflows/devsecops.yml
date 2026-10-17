@@ -1,0 +1,167 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Sessions/Session17/**"
+      - ".github/workflows/devsecops.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+env:
+  APP_DIR: Sessions/Session17
+  IMAGE: ghcr.io/${{ github.repository }}/session17-app
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Sessions/Session17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -v
+
+  sast:
+    name: SAST (Bandit)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: Sessions/Session17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit
+      - name: Run Bandit static analysis
+        run: bandit -r app/ -f txt -o bandit-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: Sessions/Session17/bandit-report.txt
+          retention-days: 7
+
+  sca:
+    name: SCA (pip-audit)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    defaults:
+      run:
+        working-directory: Sessions/Session17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit
+      - name: Audit dependencies for known vulnerabilities
+        run: pip-audit -r requirements.txt -o pip-audit-report.txt --progress-spinner off || (cat pip-audit-report.txt && exit 1)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit-report
+          path: Sessions/Session17/pip-audit-report.txt
+          retention-days: 7
+
+  secret-scan:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [sast, sca, secret-scan]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: Sessions/Session17
+          push: false
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          outputs: type=docker,dest=/tmp/session17-app.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: session17-image
+          path: /tmp/session17-app.tar
+          retention-days: 1
+
+  image-scan:
+    name: Container Image Scan + Security Gate (Trivy)
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: session17-image
+          path: /tmp
+      - name: Load image
+        run: docker load --input /tmp/session17-app.tar
+      - name: Trivy scan - gate on HIGH and CRITICAL
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
+
+  push-image:
+    name: Push Image to GHCR
+    runs-on: ubuntu-latest
+    needs: image-scan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: Sessions/Session17
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+
+  deploy:
+    name: Render Kubernetes Deployment
+    runs-on: ubuntu-latest
+    needs: push-image
+    steps:
+      - uses: actions/checkout@v4
+      - name: Substitute image tag into manifests
+        run: |
+          sed "s|__IMAGE_TAG__|${{ github.sha }}|g" ${{ env.APP_DIR }}/k8s/deployment.yaml > rendered-deployment.yaml
+          echo "----- rendered deployment -----"
+          cat rendered-deployment.yaml
+          echo "----- service -----"
+          cat ${{ env.APP_DIR }}/k8s/service.yaml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rendered-k8s-manifests
+          path: rendered-deployment.yaml
+          retention-days: 7

@@ -1,0 +1,6 @@
+bucket_name = "devops-s19-10319-data"
+instance_id = "i-95390f41d002a2e48"
+instance_public_ip = "54.214.217.184"
+public_subnet_id = "subnet-feebc0873d4c2241c"
+security_group_id = "sg-8dc380d5e9fb5c6b0"
+vpc_id = "vpc-6a4bfe137133883b1"
