@@ -13,7 +13,12 @@ I built the final CI/CD pipeline project for the course: a small Flask applicati
 - `.github/workflows/cd.yml` - on push to main: build and push the image to GHCR (`ghcr.io/sayedzahur786/devops-hero-10319/...`).
 - `k8s/` - deployment manifests for the built image.
 
-Honest status: the workflows are written and YAML-validated, and the test suite passes locally. The GitHub Actions runs themselves will execute when this is pushed to the repo (push happens after review, so there are no Actions run links yet).
+## GitHub Actions run evidence (real runs)
+
+- CI Pipeline run: SUCCESS - https://github.com/SayedZahur786/devops-hero-10319/actions/runs/39072826847 (lint, 8/8 tests, docker build) - screenshot: `evidence/ci-run-success.png`
+- CD Pipeline run: SUCCESS - https://github.com/SayedZahur786/devops-hero-10319/actions/runs/39073262938 (image built and pushed to `ghcr.io/sayedzahur786/devops-hero-10319/session16-app:latest`, deploy manifests rendered) - screenshot: `evidence/cd-run-success.png`
+
+Fixed during real runs: GHCR rejects uppercase repository owners, so image tags use the lowercase `sayedzahur786` path.
 
 ## Captured output files
 
