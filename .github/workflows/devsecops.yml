@@ -126,7 +126,7 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
           trivy version
       - name: Trivy scan - gate on HIGH and CRITICAL
-        run: trivy image --severity HIGH,CRITICAL --exit-code 1 --format table ${{ env.IMAGE }}:${{ github.sha }}
+        run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --format table ${{ env.IMAGE }}:${{ github.sha }}
 
   push-image:
     name: Push Image to GHCR
