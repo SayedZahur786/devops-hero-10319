@@ -122,7 +122,7 @@ jobs:
       - name: Load image
         run: docker load --input /tmp/session17-app.tar
       - name: Trivy scan - gate on HIGH and CRITICAL
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           image-ref: ${{ env.IMAGE }}:${{ github.sha }}
           severity: HIGH,CRITICAL
