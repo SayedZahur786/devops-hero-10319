@@ -15,7 +15,7 @@ permissions:
 
 env:
   APP_DIR: session-17-devsecops/submission/app
-  IMAGE: ghcr.io/${{ github.repository }}/session17-app
+  IMAGE: ghcr.io/sayedzahur786/devops-hero-10319/session17-app
 
 jobs:
   unit-tests:
@@ -82,10 +82,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install Gitleaks CLI
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o /tmp/gitleaks.tar.gz
+          sudo tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
+          gitleaks version
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        run: gitleaks git --redact --exit-code 1 .
 
   docker-build:
     name: Docker Build

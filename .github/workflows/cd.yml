@@ -34,8 +34,8 @@ jobs:
         id: meta
         run: |
           echo "tags<<EOF" >> "$GITHUB_OUTPUT"
-          echo "ghcr.io/${{ github.repository }}/session16-app:${{ github.sha }}" >> "$GITHUB_OUTPUT"
-          echo "ghcr.io/${{ github.repository }}/session16-app:latest" >> "$GITHUB_OUTPUT"
+          echo "ghcr.io/sayedzahur786/devops-hero-10319/session16-app:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "ghcr.io/sayedzahur786/devops-hero-10319/session16-app:latest" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
 
       - name: Build and push Docker image
